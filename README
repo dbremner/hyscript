@@ -1,0 +1,15 @@
+This project includes variable script code snippets.
+
+Subdirectories:
+
+* hysh
+
+* hylua
+
+* hyrb
+
+* hytcl
+
+* hybat
+
+* hyjs
