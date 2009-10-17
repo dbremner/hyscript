@@ -1,10 +1,14 @@
-function double(x) return x*2 end
+#!/usr/bin/env lua
 
+--
+function double(x) return x*2 end
 print( (function(x) return x*2 end)(1) )
 
+--
 function dofunction(f) return f(21) end
 print( dofunction(double) )
 
+--
 function map(func, array)
   local new_array = {}
   for i,v in ipairs(array) do
@@ -12,9 +16,9 @@ function map(func, array)
   end
   return new_array
 end
-
 print( table.concat(map(double, {1,2,3}),",") )
 
+--
 function mapn(func, ...)
   local new_array = {}
   local i=1
@@ -34,6 +38,7 @@ t = {1,4,2,5,6,7,3}
 table.sort(t, function(a,b) return a<b end)
 print( table.concat(t,",") )
 
+--
 function cdr(arr)
   local new_array = {}
   for i = 2, table.getn(arr) do
