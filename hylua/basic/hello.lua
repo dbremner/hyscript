@@ -1,5 +1,8 @@
 #!/usr/bin/env lua
 
+--
+io.write("Hello world, from ",_VERSION,"!\n")
+
 -- hello.lua
 print("Hello World!");
 
