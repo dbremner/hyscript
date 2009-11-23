@@ -6,19 +6,25 @@ rem
 rem
 rem
 
-echo "Set IP to 59.66.172.49"
+REM =================================
+set IFNAME="Local Area Connection"
+set IPADDR="166.111.37.28"
+set GATEWAY="166.111.36.1"
+set DNSADDR1="166.111.8.28"
+set DNSADDR2="166.111.8.29"
+REM =================================
 
-netsh interface ip set address "Local Area Connection" static 59.66.172.49 255.255.255.0 59.66.172.1 1
+echo "Set IP to %IPADDR%"
 
-rem netsh interface ip set dns  "Local Area Connection" static 166.111.8.28166.111.8.29 primary
+netsh interface ip set address %IFNAME% static %IPADDR% 255.255.254.0 %GATEWAY% 1
 
 echo "Clear previous DNS"
-netsh interface ip delete dns  "Local Area Connection"  all
+netsh interface ip delete dns %IFNAME%" all
 
 echo "Add DNS 166.111.8.28"
-netsh interface ip add dns "Local Area Connection" 166.111.8.28
+netsh interface ip add dns %IFNAME% %DNSADDR1%
 
 echo "Add DNS 166.111.8.29"
-netsh interface ip add dns "Local Area Connection" 166.111.8.29 index=2
+netsh interface ip add dns %IFNAME% %DNSADDR2% index=2
 
 @pause
