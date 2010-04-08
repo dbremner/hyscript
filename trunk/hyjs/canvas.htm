@@ -115,6 +115,206 @@ function renderDepth(canvas, scene, camera, maxDepth) {
     ctx.putImageData(imgdata, 0, 0);
 }
 
+function renderNormal(canvas, scene, camera) {
+    var ctx = canvas.getContext("2d");
+    var w = canvas.attributes.width.value;
+    var h = canvas.attributes.height.value;
+    ctx.fillStyle = "rgb(0,0,0)";
+    ctx.fillRect(0, 0, w, h);
+    var imgdata = ctx.getImageData(0, 0, w, h);
+    var pixels = imgdata.data;
+
+    scene.initialize();
+    camera.initialize();
+
+    var i = 0;
+    for (var y = 0; y < h; y++) {
+        var sy = 1 - y / h;
+        for (var x = 0; x < w; x++) {
+            var sx = x / w;
+            var ray = camera.generateRay(sx, sy);
+            var result = scene.intersect(ray);
+            if (result.geometry) {
+                pixels[i    ] = (result.normal.x + 1) * 128;
+                pixels[i + 1] = (result.normal.y + 1) * 128;
+                pixels[i + 2] = (result.normal.z + 1) * 128;
+                pixels[i + 3] = 255;
+            }
+            i += 4;
+        }
+    }
+
+    ctx.putImageData(imgdata, 0, 0);
+}
+
+Color = function(r, g, b) { this.r = r; this.g = g; this.b = b };
+
+Color.prototype = {
+    copy : function() { return new Color(this.r, this.g, this.b); },
+    add : function(c) { return new Color(this.r + c.r, this.g + c.g, this.b + c.b); },
+    multiply : function(s) { return new Color(this.r * s, this.g * s, this.b * s); },
+    modulate : function(c) { return new Color(this.r * c.r, this.g * c.g, this.b * c.b); }
+};
+
+Color.black = new Color(0, 0, 0);
+Color.white = new Color(1, 1, 1);
+Color.red = new Color(1, 0, 0);
+Color.green = new Color(0, 1, 0);
+Color.blue = new Color(0, 0, 1);
+
+CheckerMaterial = function(scale, reflectiveness) { this.scale = scale; this.reflectiveness = reflectiveness; };
+
+CheckerMaterial.prototype = {
+    sample : function(ray, position, normal) {
+        return Math.abs((Math.floor(position.x * 0.1) + Math.floor(position.z * this.scale)) % 2) < 1 ? Color.black : Color.white;
+    }
+};
+
+PhongMaterial = function(diffuse, specular, shininess, reflectiveness) {
+    this.diffuse = diffuse;
+    this.specular = specular;
+    this.shininess = shininess;
+    this.reflectiveness = reflectiveness;
+};
+
+// global temp
+var lightDir = new Vector3(1, 1, 1).normalize();
+var lightColor = Color.white;
+
+PhongMaterial.prototype = {
+    sample: function(ray, position, normal) {
+        var NdotL = normal.dot(lightDir);
+        var H = (lightDir.subtract(ray.direction)).normalize();
+        var NdotH = normal.dot(H);
+        var diffuseTerm = this.diffuse.multiply(Math.max(NdotL, 0));
+        var specularTerm = this.specular.multiply(Math.pow(Math.max(NdotH, 0), this.shininess));
+        return lightColor.modulate(diffuseTerm.add(specularTerm));
+    }
+};
+
+
+function rayTrace(canvas, scene, camera) {
+    var ctx = canvas.getContext("2d");
+    var w = canvas.attributes.width.value;
+    var h = canvas.attributes.height.value;
+    ctx.fillStyle = "rgb(0,0,0)";
+    ctx.fillRect(0, 0, w, h);
+    var imgdata = ctx.getImageData(0, 0, w, h);
+    var pixels = imgdata.data;
+
+    scene.initialize();
+    camera.initialize();
+
+    var i = 0;
+    for (var y = 0; y < h; y++) {
+        var sy = 1 - y / h;
+        for (var x = 0; x < w; x++) {
+            var sx = x / w;
+            var ray = camera.generateRay(sx, sy);
+            var result = scene.intersect(ray);
+            if (result.geometry) {
+                var color = result.geometry.material.sample(ray, result.position, result.normal);
+                pixels[i] = color.r * 255;
+                pixels[i + 1] = color.g * 255;
+                pixels[i + 2] = color.b * 255;
+                pixels[i + 3] = 255;
+            }
+            i += 4;
+        }
+    }
+
+    ctx.putImageData(imgdata, 0, 0);
+}
+
+Plane = function(normal, d) { this.normal = normal; this.d = d; };
+
+Plane.prototype = {
+    copy : function() { return new plane(this.normal.copy(), this.d); },
+
+    initialize : function() {
+        this.position = this.normal.multiply(this.d);
+    },
+
+    intersect : function(ray) {
+        var a = ray.direction.dot(this.normal);
+        if (a >= 0)
+            return IntersectResult.noHit;
+
+        var b = this.normal.dot(ray.origin.subtract(this.position));
+        var result = new IntersectResult();
+        result.geometry = this;
+        result.distance = -b / a;
+        result.position = ray.getPoint(result.distance);
+        result.normal = this.normal;
+        return result;
+    }
+};
+
+
+Union = function(geometries) { this.geometries = geometries; };
+
+Union.prototype = {
+    initialize: function() {
+        for (var i in this.geometries)
+            this.geometries[i].initialize();
+    },
+
+    intersect: function(ray) {
+        var minDistance = Infinity;
+        var minResult = IntersectResult.noHit;
+        for (var i in this.geometries) {
+            var result = this.geometries[i].intersect(ray);
+            if (result.geometry && result.distance < minDistance) {
+                minDistance = result.distance;
+                minResult = result;
+            }
+        }
+        return minResult;
+    }
+};
+
+function rayTraceRecursive(scene, ray, maxReflect) {
+    var result = scene.intersect(ray);
+
+    if (result.geometry) {
+        var reflectiveness = result.geometry.material.reflectiveness;
+        var color = result.geometry.material.sample(ray, result.position, result.normal);
+        color = color.multiply(1 - reflectiveness);
+
+        if (reflectiveness > 0 && maxReflect > 0) {
+            var r = result.normal.multiply(-2 * result.normal.dot(ray.direction)).add(ray.direction);
+            ray = new Ray3(result.position, r);
+            var reflectedColor = rayTraceRecursive(scene, ray, maxReflect - 1);
+            color = color.add(reflectedColor.multiply(reflectiveness));
+        }
+        return color;
+    }
+    else
+        return Color.black;
+}
+
+function rayTraceReflection(canvas, scene, camera, maxReflect) {
+    scene.initialize();
+    camera.initialize();
+
+    var i = 0;
+    for (var y = 0; y < h; y++) {
+        var sy = 1 - y / h;
+        for (var x = 0; x < w; x++) {
+            var sx = x / w;
+            var ray = camera.generateRay(sx, sy);
+            var color = rayTraceRecursive(scene, ray, maxReflect);
+            pixels[i++] = color.r * 255;
+            pixels[i++] = color.g * 255;
+            pixels[i++] = color.b * 255;
+            pixels[i++] = 255;
+        }
+    }
+
+    ctx.putImageData(imgdata, 0, 0);
+}
+
+
 </script>
 </head>
 <body>
@@ -131,6 +331,7 @@ var imgdata = ctx.getImageData(0, 0, w, h);
 var pixels = imgdata.data;
 var i = 0;
 for (var y = 0; y < h; y++)
+{
     for (var x = 0; x < w; x++)
     {
         pixels[i++] = x / w * 255;
@@ -138,6 +339,7 @@ for (var y = 0; y < h; y++)
         pixels[i++] = 0;
         pixels[i++] = 255;
     }
+}
 ctx.putImageData(imgdata, 0, 0);
 </textarea>
 </p>
@@ -162,5 +364,41 @@ renderDepth(
 
 
 <canvas width="256" height="256" id="depthCanvas"></canvas>
+
+
+<p>
+<textarea cols="80" rows="20" id="canvasNormalCode">
+renderNormal(
+    document.getElementById('normalCanvas'),
+    new Sphere(new Vector3(0, 10, -10), 10),
+    new PerspectiveCamera(new Vector3(0, 10, 10), new Vector3(0, 0, -1), new Vector3(0, 1, 0), 90),
+    20);
+</textarea> </p>
+
+<p><button onclick="eval(document.getElementById('canvasNormalCode').value)" type="button">Run</button></p>
+
+
+<canvas width="256" height="256" id="normalCanvas"></canvas>
+
+
+<p>
+<textarea cols="80" rows="20" id="canvasRayTraceCode">
+var plane = new Plane(new Vector3(0, 1, 0), 0);
+var sphere1 = new Sphere(new Vector3(-10, 10, -10), 10);
+var sphere2 = new Sphere(new Vector3(10, 10, -10), 10);
+plane.material = new CheckerMaterial(0.1);
+sphere1.material = new PhongMaterial(Color.red, Color.white, 16);
+sphere2.material = new PhongMaterial(Color.blue, Color.white, 16);
+rayTrace(
+    document.getElementById('rayTraceCanvas'),
+    new Union([plane, sphere1, sphere2]),
+    new PerspectiveCamera(new Vector3(0, 5, 15), new Vector3(0, 0, -1), new Vector3(0, 1, 0), 90));
+</textarea> </p>
+
+<p><button onclick="eval(document.getElementById('canvasRayTraceCode').value)" type="button">Run</button></p>
+
+
+<canvas width="256" height="256" id="rayTraceCanvas"></canvas>
+
 </body>
 </html>
