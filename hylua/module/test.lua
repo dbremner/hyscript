@@ -1,4 +1,8 @@
 -- Load the module
 require "hello"
 
-hello.sayHi("Hello World!")
+--helloc.sayhello("Hello World!")
+
+--helloc.messagebox("Hello World!")
+
+sayHi("Hello World!")
