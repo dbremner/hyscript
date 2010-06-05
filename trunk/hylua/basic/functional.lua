@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 
 --
-function double(x) return x*2 end
+--function double(x) return x*2 end
 print( (function(x) return x*2 end)(1) )
 
 --
