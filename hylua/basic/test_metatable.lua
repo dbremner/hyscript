@@ -1,8 +1,8 @@
 x = { value = 3 }      -- our object
 
 mt = { __add = function (a, b)
-                  return { value = a.value + b.value }
-                end }  -- metatable containing event callbacks
+                 return { value = a.value + b.value }
+               end }  -- metatable containing event callbacks
 
 setmetatable(x, mt)  -- attach our metamethods to our object
 
