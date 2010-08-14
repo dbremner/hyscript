@@ -1,5 +1,5 @@
 @echo off
 
-call D:\GS\mingw4\bin\tclsh84.exe<input
+call D:\Progs\MinGW\ThirdParty\tcl84\bin\tclsh84.exe < input
 
 @pause

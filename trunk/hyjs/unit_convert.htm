@@ -10,7 +10,7 @@ window.addEvent('unload', saveUnitDefaults);
 function initialize(){
 
   loadGlobalOptions();
-  
+
   if (document.forms['ConvertForm']) {
     loadUnitDefaults();
     Convert();
@@ -25,10 +25,10 @@ function loadUnitDefaults() {
 
   var lUnitFromIndex = getCookieDefault(unitID + "LastUnitFromName", defaultUnitIndex);
   var lUnitToIndex   = getCookieDefault(unitID + "LastUnitToName",   defaultUnitIndex);
-  
+
   setUnitSelectOption('UnitFrom', lUnitFromIndex);
   setUnitSelectOption('UnitTo',   lUnitToIndex);
-  
+
   document.forms['ConvertForm'].elements['ValueFrom'].value = getCookieDefault(unitID + "LastFromValue", 1)
 }
 
@@ -37,13 +37,13 @@ function saveUnitDefaults() {
   if (document.forms['ConvertForm']) {
 
     var lElement;
-    
+
     lElement = document.forms['ConvertForm'].elements['UnitFrom'];
     Cookie.set(unitID + 'LastUnitFromName', lElement.options[lElement.selectedIndex].value, {duration: 365});
 
     lElement = document.forms['ConvertForm'].elements['UnitTo'];
     Cookie.set(unitID + 'LastUnitToName', lElement.options[lElement.selectedIndex].value, {duration: 365});
-    
+
     lElement = document.forms['ConvertForm'].elements['ValueFrom'];
     Cookie.set(unitID + 'LastFromValue', lElement.value, {duration: 365});
 
@@ -54,9 +54,9 @@ function setUnitSelectOption(aElementName, aOptionIndex) {
 
   var lElement = document.forms['ConvertForm'].elements[aElementName];
 
-  if ((aOptionIndex >= 0) && 
+  if ((aOptionIndex >= 0) &&
       (aOptionIndex < lElement.options.length)) {
-      
+
     lElement.selectedIndex = aOptionIndex;
   }
 
@@ -73,7 +73,7 @@ function formatFloat(number, X) {
 function getCookieDefault(aName, aDefault) {
 
   var lValue = Cookie.get(aName);
-  
+
   if (lValue === false) {
     return aDefault;
   }
@@ -86,19 +86,19 @@ function getCookieDefault(aName, aDefault) {
 function getNumDigs() {
   return parseInt(getCookieDefault("NumDigs", 6));
 }
- 
+
 function isNumeric(aText) {
   var ValidChars = "0123456789.";
- 
-  for (i = 0; i < aText.length; i++) { 
+
+  for (i = 0; i < aText.length; i++) {
     if (ValidChars.indexOf(aText.charAt(i)) == -1) {
       return false;
     }
   }
 
-  return true;   
-}  
-  
+  return true;
+}
+
 function InsertUnitSelector(aElementName) {
   document.writeln('<select name="' + aElementName + '" size="1" onchange="Convert()">');
 
@@ -132,7 +132,7 @@ function ConvertInternal(aFromUnitIndex, value, aToUnitIndex) {
 
 }
 
-function Convert() { 
+function Convert() {
   with (document.forms['ConvertForm']) {
 
     var lFromValue = parseFloat(elements['ValueFrom'].value);

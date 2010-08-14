@@ -8,10 +8,13 @@ OBJEXT = .o
 BINEXT = .exe
 
 #
+TCL_DIR=D:/Progs/MinGW/ThirdParty/tcl84
+
+#
 CFLAGS = -DUSE_TCL_STUBS
 CXXFLAGS =
-INC = -I"../../inc"
-LIB = -L"../../lib" -shared -ltclstub84
+INC = -I"$(TCL_DIR)/include"
+LIB = -L"$(TCL_DIR)/lib" -shared -ltclstub84
 
 #
 SRCDIR = .

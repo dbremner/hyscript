@@ -11,7 +11,7 @@
 #include "lua.h"
 #include "lauxlib.h"
 
-#define MYTYPE		"vector3"
+#define MYTYPE        "vector3"
 
 static double *Pget(lua_State *L, int i)
 {
@@ -27,7 +27,7 @@ static double *Pnew(lua_State *L)
  return v;
 }
 
-static int Lnew(lua_State *L)			/** vector3([x,y,z]) */
+static int Lnew(lua_State *L)            /** vector3([x,y,z]) */
 {
  double *v;
  lua_settop(L,3);
@@ -42,7 +42,7 @@ static int Lget(lua_State *L)
 {
  double *v=Pget(L,1);
  const char* i=luaL_checkstring(L,2);
- switch (*i) {		/* lazy! */
+ switch (*i) {        /* lazy! */
   case '1': case 'x': case 'r': lua_pushnumber(L,v[0]); break;
   case '2': case 'y': case 'g': lua_pushnumber(L,v[1]); break;
   case '3': case 'z': case 'b': lua_pushnumber(L,v[2]); break;
@@ -55,7 +55,7 @@ static int Lset(lua_State *L) {
  double *v=Pget(L,1);
  const char* i=luaL_checkstring(L,2);
  double t=luaL_checknumber(L,3);
- switch (*i) {		/* lazy! */
+ switch (*i) {        /* lazy! */
   case '1': case 'x': case 'r': v[0]=t; break;
   case '2': case 'y': case 'g': v[1]=t; break;
   case '3': case 'z': case 'b': v[2]=t; break;
@@ -75,10 +75,10 @@ static int Ltostring(lua_State *L)
 
 static const luaL_reg R[] =
 {
-	{ "__index",	Lget		},
-	{ "__newindex",	Lset		},
-	{ "__tostring",	Ltostring	},
-	{ NULL,		NULL		}
+    { "__index",    Lget        },
+    { "__newindex",    Lset        },
+    { "__tostring",    Ltostring    },
+    { NULL,        NULL        }
 };
 
 LUALIB_API int luaopen_vec3(lua_State *L)
