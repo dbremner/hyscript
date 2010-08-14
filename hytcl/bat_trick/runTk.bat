@@ -1,7 +1,7 @@
 ::catch {};#\
 @echo off
 ::catch {};#\
-@"D:/GS/mingw4/bin/wish84.exe" %0 %*
+@"D:/Progs/MinGW/ThirdParty/tcl84/bin/wish84.exe" %0 %*
 ::catch {};#\
 @goto :eof
 

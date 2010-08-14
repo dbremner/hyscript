@@ -8,24 +8,26 @@ OBJEXT = .o
 BINEXT = .exe
 
 #
-CFLAGS =
-CXXFLAGS =
-INC = -I"../../inc"
-LIB = -L"../../lib" -ltcl84
+TCL_DIR=D:/Progs/MinGW/ThirdParty/tcl84
+SRCDIR=.
 
 #
-SRCDIR = .
-INCDIR = .
+CFLAGS =
+CXXFLAGS =
+INC = -I"$(TCL_DIR)/include"
+LIB = -L"$(TCL_DIR)/lib" -ltcl84
+
+#
 IN  = test.c
 SRC = $(addprefix $(SRCDIR)/, $(IN))
 
 #
 OBJ = ${IN:$(SRCEXT)=$(OBJEXT)}
 BIN = test.exe
-RC  = 
+RC  =
 RES = ${RC:.rc=.res}
 #
-HEADER = 
+HEADER =
 #
 all: $(BIN)
 
@@ -39,8 +41,8 @@ $(OBJ) : $(SRC) $(HEADER)
 
 #
 $(RES) : $(RC)
-	$(WINDRES) -i $(RC) -o $(RES) -O coff 
-    
+	$(WINDRES) -i $(RC) -o $(RES) -O coff
+
 #
 clean :
 	rm ${OBJ} ${BIN}

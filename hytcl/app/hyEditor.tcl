@@ -20,10 +20,10 @@ proc exitApp {} {
 proc showAbout {} {
     tk_dialog .foo   \
               "About" \
-              { 
-                 Do you want to say yes? 
-                 Do you want to say yes? 
-                 Do you want to say yes? 
+              {
+                 Do you want to say yes?
+                 Do you want to say yes?
+                 Do you want to say yes?
               } \
               questhead 0 OK
 }
@@ -49,7 +49,7 @@ $m add cascade -menu $m.edit -label Edit
 $m add cascade -menu $m.help -label Help
 
 # submenu /file
-$m.file add command -label "New" -command "newFile"	
+$m.file add command -label "New" -command "newFile"
 $m.file add command -label "Open..." -command "openFile"
 $m.file add command -label "Close" -command "closeFile"
 $m.file add separator
@@ -64,6 +64,6 @@ $m.help add command -label "About" -command "showAbout"
 # text
 #
 text .text -relief sunken -bd 2 -setgrid 1 \
-	-height 30 -undo 1 -autosep 1
-    
+    -height 30 -undo 1 -autosep 1
+
 pack .text -expand yes -fill both
