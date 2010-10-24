@@ -1,0 +1,1896 @@
+<html><head><title>Mktclapp: A tool for building C/C++ programs that use Tcl/Tk</title></head><body bgcolor="white">
+
+<h1>Contents:</h1>
+<ul>
+<li><a href="#toc1">
+Introduction
+</a></li>
+<li><a href="#toc2">
+A Quick Overview
+</a></li>
+<li><a href="#toc3">
+Setting Up Your Development Environment
+</a></li>
+<li><a href="#toc4">
+Hello, World!
+</a></li>
+<li><a href="#toc5">
+If You Are Having Trouble
+</a></li>
+<li><a href="#toc6">
+Adding More Tcl Code
+</a></li>
+<li><a href="#toc7">
+Making The Program Standalone
+</a></li>
+<li><a href="#toc8">
+Common Mistakes
+</a></li>
+<li><a href="#toc9">
+Adding In Some C Code
+</a></li>
+<li><a href="#toc10">
+Implementing New Tcl Commands In C
+</a></li>
+<li><a href="#toc11">
+Using The Tcl_Obj Interface For Tcl New Commands
+</a></li>
+<li><a href="#toc12">
+Using Tcl Namespaces
+</a></li>
+<li><a href="#toc13">
+Executing Tcl/Tk Commands From C Code
+</a></li>
+<li><a href="#toc14">
+Other Functions Provided By Mktclapp
+</a></li>
+<li><a href="#toc15">
+The <tt>%q</tt> Format Field
+</a></li>
+<li><a href="#toc16">
+Putting A  <tt>main()</tt> In Your C Code
+</a></li>
+<li><a href="#toc17">
+C Functions For Application Initialization
+</a></li>
+<li><a href="#toc17a">
+Bundling Binary Data Files With The Executable
+</a></li>
+<li><a href="#toc17b">
+Building Tcl Extensions With Mktclapp
+</a></li>
+<li><a href="#toc18">
+Running Mktclapp From The Command Line
+Or In A Makefile
+</a></li>
+<li><a href="#toc18b">
+Using MkTclApp With The MingW32 Compiler For Windows
+</a></li>
+<li><a href="#toc19">
+History Of Mktclapp And Summary
+</a></li>
+<li><a href="#toc20">
+Bibliography
+</a></li>
+</ul>
+<hr>
+
+<h1 align="center">
+Mktclapp: A Tool For Building C/C++ Programs 
+That Use Tcl/Tk
+</h1>
+<a name="toc1"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc1">Introduction
+</a></h2>
+
+<p><a name="toc1">Many people think that Tcl/Tk is just a scripting language.
+They think the only way to use Tcl/Tk is to
+write a script of Tcl commands, then run that script using
+either the "tclsh" or "wish" interpreters.</a></p>
+
+<p><a name="toc1">But this perception is false.
+At its heart,
+Tcl/Tk is really a C library, just like Motif, Gtk or MFC.
+To use Tcl/Tk as it was originally intended, you have to write
+a C program that calls the library.  "Tclsh" and "wish" are
+just two programs that happen to be implemented using the
+Tcl/Tk library.</a></p>
+
+<p><a name="toc1">This is not to disparage the use of scripts that are
+interpreted by "tclsh" or "wish".
+The use of scripts is a very powerful idea and has many important
+applications.
+But sometimes problems work out better if you approach them with
+a C or C++ program rather than a script.
+Unfortunately, the mixing of C or C++ and Tcl/Tk into the same
+program is a topic that has been neglected in the Tcl/Tk
+literature and documentation.</a></p>
+
+<p><a name="toc1">The article is about a utility called <b>mktclapp</b>.
+Mktclapp simplifies the task of building a program 
+that uses both C/C++ code and Tcl/Tk.
+Using mktclapp, you can quickly write programs that:</a></p>
+<ul>
+<p></p><li><a name="toc1"> Implement powerful GUIs or command-line interfaces using Tcl or
+        Tcl/Tk,</a></li><p></p>
+<p></p><li><a name="toc1"> Do speedy computation on complex data structures using C or C++,
+        </a></li><p></p>
+<p></p><li><a name="toc1"> Compile under both Unix and Windows98/NT with no source code changes,
+        </a></li><p></p>
+<p></p><li><a name="toc1"> Are realized in a single standalone executable file,</a></li><p></p>
+<p></p><li><a name="toc1"> Run on machines without "tclsh" or "wish" installed, and</a></li><p></p>
+<p></p><li><a name="toc1"> Are difficult for end-users to read and reverse-engineer.</a></li><p></p>
+</ul>
+
+<p><a name="toc1">Mktclapp is very easy to learn to use.
+If you already know how to program in C and you are familiar
+with writing Tcl/Tk scripts, then you should be able to start
+using mktclapp in just a few minutes.
+If you are inexperienced, it might take you just a little longer,
+but it still is not hard.</a></p>
+
+<a name="toc2"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc2">A Quick Overview
+</a></h2>
+
+<p><a name="toc2">This is what mktclapp does for you:
+You begin with a collection of source files, some written in C or C++
+and others written in pure Tcl or Tcl/Tk.
+(See figure 1 below).  The mktclapp program scans these source files
+and uses the information it gleans to build an
+<b>application initialization</b> module, shown as <b>appinit.c</b>
+in the figure.
+You then use your regular C compiler to turn the application initialization
+module and your C/C++ code into a standalone executable.</a></p>
+
+<p>
+<a name="fig1">
+</a></p><hr><center><a name="fig1"><img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/fig1.jpg" alt="Figure 1"><br>
+<b>Figure 1</b></a></center><p></p><p></p><hr><p></p>
+
+<p><a name="fig1">The mktclapp program performs a number of services for you:</a></p>
+
+<ul>
+<p></p><li><a name="fig1"> It takes care of the messy details of creating and
+     initializing a Tcl or Tcl/Tk interpreter.</a></li><p></p>
+<p></p><li><a name="fig1"> It converts all your Tcl/Tk scripts into static C strings inside
+     the application initialization module so they
+     will be compiled into the executable.</a></li><p></p>
+<p></p><li><a name="fig1"> It optionally "shrouds" your Tcl/Tk scripts so that they are
+     not easily visible to end users.</a></li><p></p>
+<p></p><li><a name="fig1"> It provides some extra library functions that make it easier
+     to write C code that invokes Tcl/Tk subroutines.</a></li><p></p>
+<p></p><li><a name="fig1"> It registers certain C functions as Tcl/Tk commands so that
+     your Tcl/Tk scripts can directly execute those C functions.</a></li><p></p>
+</ul>
+
+<p><a name="fig1">It short, mktclapp takes care of a lot of the mundate
+details of writing a mixed C/C++/Tcl/Tk program so that you have more
+time left over to focus on solving the interesting problems.</a></p>
+
+<p><a name="fig1">Mktclapp is a command-line program which you can call from your
+project's Makefile.  But there is also a GUI wrapper for mktclapp
+(written in Tcl/Tk, of course) that makes the program easier
+to operate.  The GUI is called
+<b>xmktclapp.tcl</b>.  With xmktclapp.tcl, all you have to do is
+select the options you want, choose your C, C++
+and Tcl/Tk source files from a file list, and press "Build".
+The application initialization file will be built for your automatically.
+Then just run your compiler as you normally would and the job is
+done.  A snapshot of the xmktclapp.tcl GUI is show in figure 2.</a></p>
+
+<p>
+<a name="fig2">
+</a></p><hr><center><a name="fig2"><img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/xmta1.jpg" alt="Figure 2"><br>
+<b>Figure 2</b></a></center><p></p><p></p><hr><p></p>
+
+<a name="toc3"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc3">Setting Up Your Development Environment
+</a></h2>
+
+<p><a name="toc3">Are you ready to get started?  This section will guide
+you step-by-step into setting up your development environment to
+use mktclapp.  The process is not difficult and should not take
+very long.  There are three simple steps:</a></p>
+
+<ol>
+<li><p>
+<a name="toc3">Make sure you have a suitable ANSI C compiler
+and POSIX compliant development environment handy.
+You must have an ANSI-C compiler.  Older K&amp;R C compilers will
+not work.</a></p>
+
+<p><a name="toc3">For the development environment, I like to use some kind
+of Unix, especially Linux.  
+Unix was originally written by and for software developers, and is
+an excellent environment for getting a lot of work done in a short
+amount of time.  But mktclapp also works on Windows platforms.
+For use on Windows, though, you'll need to use the Cygwin
+(or Mingw32) compiler and development environment.  You can download
+this package for free from
+</a><a href="http://sourceware.cygnus.com/cygwin/">
+http://sourceware.cygnus.com/cygwin/</a>.
+
+
+</p><p>
+<img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/righthand.jpg" align="left">
+<a href="mailto:dlabelle@albany.net">Dennis LaBelle</a>
+has gotten mktclapp to work with VC++ 6.0.
+He uses it to build his "Freewrap" program.
+See <a href="http://home.nycap.rr.com/dlabelle/freewrap/freewrap.html">
+http://home.nycap.rr.com/dlabelle/freewrap/freewrap.html</a> for additional
+Information.
+</p>
+
+</li><li><p>
+Next, you'll want to download and compile the Tcl/Tk source code.
+You can find the sources at several sites, including</p>
+
+<p></p><ul>
+<li> <a href="http://www.tclconsortium.org/software/index.vet">
+     http://www.tclconsortium.org/software/index.vet</a></li>
+<li> <a href="http://www.scriptics.com/software/download.html">
+     http://www.scriptics.com/software/download.html</a></li>
+<li> <a href="http://www.neosoft.com/tcl/">
+     http://www.neosoft.com/tcl/</a></li>
+</ul><p></p>
+
+<p>The Cygwin environment comes with a copy of Tcl/Tk already built
+and installed.  If you want to compile it yourself (or if you want
+to use a version of Tcl/Tk other than the version that
+comes with Cygwin) you may need to
+download and apply some patches from</p>
+<ul>
+<p></p><li> <a href="http://www.xraylith.wisc.edu/%7Ekhan/software/tcl">
+        http://www.xraylith.wisc.edu/~khan/software/tcl</a></li><p></p>
+</ul>
+
+<p>
+<img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/righthand.jpg" align="left">
+The Tcl/Tk that comes with the Cygwin compiler requires a special
+DLL named <b>cygwin1.dll</b>.  This DLL is covered by GPL (not
+the LGPL) and can not be distributed with proprietary software
+without first paying a licensing fee to Cygnus.  If this
+is a problem for you, you can use the standard Tcl/Tk DLLs from
+Scriptics that do not require a licensing fee.  See
+<a href="#toc18b">below</a> for details.
+</p>
+
+<p>
+<img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/righthand.jpg" align="left">
+Beginning with version 8.3.2, Tcl/Tk compiles cleanly under
+both Cygwin and Mingw without any patching.  There is even
+a convenient "configure" script.  And you can build either
+DLLs or static libraries.  It all works very well and is
+highly recommended.
+</p>
+
+<p>After you download the code, untar it and change to the directory
+named "tcl*/unix".  In that directory, type "./configure" and
+then type "make".  This will build Tcl for you.  After building
+Tcl, cd to "../../tk*/unix" and there type "./configure" and "make".
+This will build Tk.</p>
+
+<p>
+<a name="RecordLibraries">
+<img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/righthand.jpg" align="left">
+<b>IMPORTANT:</b> While building both Tcl and Tk, notice the sequence of
+library directives that the Makefile gives to the C compiler when it
+is linking "tclsh" and "wish".  These directives will look something
+like the following:</a></p>
+<blockquote>
+<a name="RecordLibraries"><b><tt>-ltk8.0 -ltcl8.0 -L/usr/X11R6/lib -lX11 -lm -ldl</tt></b>
+</a></blockquote>
+<p><a name="RecordLibraries">The exact sequence of libraries varies from one system to another.
+Write down the libraries that your systems uses.  You will need to
+type in the exact same sequence of libraries when you compile your
+own applications later on.</a></p>
+
+<p><a name="RecordLibraries">If you are using Cygwin beta19, the compiler options you need
+to remember look like the line shown below.  Note that several extra
+libraries have been added to this list since version 2.1 of Mktclapp!</a></p>
+<blockquote>
+<a name="RecordLibraries"><b><tt>-Wl,--subsystem,windows -ltk80 -ltcl80 -lm -lkernel32 -lgdi32 -luser32 -comdlg32</tt></b>
+</a></blockquote>
+<p><a name="RecordLibraries">With Cygwin beta20 or later, the libraries you will need are like this:</a></p>
+<blockquote>
+<a name="RecordLibraries"><b><tt>-mwindows -ltk80 -ltcl80 -lm</tt></b>
+</a></blockquote>
+</li><p></p>
+
+
+<p></p><li>
+<a name="RecordLibraries">Download and compile mktclapp.  You can get the sources to mktclapp
+from
+</a><ul>
+<p></p><li><a name="RecordLibraries"> </a><a href="http://www.hwaci.com/sw/mktclapp/">
+        http://www.hwaci.com/sw/mktclapp/</a>.</li><p></p>
+</ul>
+<p>The source code to mktclapp is a single file of C code named
+<b>mktclapp.c</b>.  There is no makefile.  There really isn't a
+need for one.  To build mktclapp you type this command:</p>
+<blockquote>
+<b>cc -o mktclapp mktclapp.c</b>
+</blockquote>
+<p>The source code to mktclapp is very portable and should compile
+without modification and without the need for special compiler
+switches on any ANSI C compiler.</p>
+
+<p>The source code to xmktclapp.tcl is also a single file.  But xmktclapp.tcl
+is a Tcl/Tk script, so it requires no compilation.  All you have
+to do is download it.</p>
+</li></ol>
+
+<p>Now your environment should be setup and ready to build some
+great programs using mktclapp.  Let's get starting.</p>
+
+<a name="toc4"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc4">Hello, World!
+</a></h2>
+
+<p><a name="toc4">We'll begin by using xmktclapp.tcl to build a simple program that
+involves just 9 lines of Tcl/Tk and no C/C++.
+The Tcl/Tk code is contained in a single file named <b>hello.tcl</b>
+and looks like this:</a></p>
+
+<blockquote><pre><a name="toc4"><b>button .b -text Go -command Hello
+button .e -text Quit -command exit
+pack .b .e -side left
+proc Hello {} {
+  catch {destroy .hi}
+  toplevel .hi
+  button .hi.b -text {Hello, World!} -command {destroy .hi}
+  pack .hi.b
+}</b>
+</a></pre></blockquote>
+
+<p><a name="toc4">This code creates a small window containing two buttons labeled
+"Go" and "Quit".  If you press the Quit button, the program exits.
+If you press "Go", it pops up another small window containing a
+single button labeled "Hello, World!".  If you press the Hello, World!
+button, the new window disappears.</a></p>
+
+<p><a name="toc4">To build your first mktclapp program, first type the code above
+into a file named <b>hello.tcl</b>.  Then, just to make sure you
+didn't mistype anything, run the script by double-clicking the
+icon in Windows or in Unix by typing:</a></p>
+
+<blockquote><a name="toc4"><b>wish hello.tcl</b></a></blockquote>
+
+<p><a name="toc4">Once you are satisfied that the script is right, launch xmktclapp.tcl
+by typing</a></p>
+
+<blockquote><a name="toc4"><b>wish xmktclapp.tcl</b></a></blockquote>
+
+<p><a name="toc4">If you are using windows and have installed a binary release
+of Tcl/Tk from Scriptics, then you can double-click on the
+xmktclapp.tcl icon to launch it.  But when you do, you will
+not be running the Cygwin version of Tcl/Tk.  This can cause
+some problems.  It is best to run xmktclapp.tcl using the
+Cygwin version of the Tcl/Tk interpreter.  To do so, bring
+up a Cygwin DOS box and type</a></p>
+
+<blockquote><a name="toc4"><b>cygwish80 xmktclapp.tcl</b></a></blockquote>
+
+<p><a name="toc4">After you get xmktclapp.tcl running, you should see a screen like
+</a><a href="#fig2">figure 2</a>.
+Now change the <b>Settings</b> page of xmktclapp.tcl to look exactly like
+figure 2.  Specifically, set the Application Mode to Tcl/Tk,
+set Fork Into Background, Standalone
+and Shroud all to No, set Command Line Input to None,
+set the name of the Configuration File to <b>hello.mta</b> and
+the name of the Output File to <b>hello.c</b>.</p>
+
+<p>Don't worry about the contents of the <b>Libraries</b> page on
+the xmktclapp.tcl screen at this point.  The libraries only
+come into play if you set Standalone to "Yes" or "Strict".
+But do go over to the
+<b>C/C++ Modules</b> pages and make sure
+it is blank.  Use the "Delete" button if necessary to
+clear it out.</p>
+
+<p>On the "Tcl Scripts" page, you have to insert the name of your
+Tcl script in two places, as shown in figure 3.</p>
+
+<p></p><center>
+<img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/xmta-fig3.jpg" alt="figure 3"><br>
+Figure 3
+</center><p></p>
+
+<p>Be sure the hello.tcl script appears in both the list box on top and
+in the "Startup Script" entry box down below.
+When everything looks right, select the File/Build menu option,
+or go back to the "Settings" page and press the "Build" button.
+The build will create files named <b>hello.c</b> and <b>hello.h</b>.</p>
+
+<p>Referring back to <a href="#fig1">figure 1</a>, what you have just
+done is the first step of the compilation process.  You have run
+mktclapp on your C, C++ and Tcl/Tk source files in order to generate
+an application initialization file.  In this particular instance you
+don't happen to be using any C or C++ source files, only Tcl/Tk
+files.  But the idea is still the same.  The
+next step is to run the C compiler.</p>
+
+<p>The command to compile your program will be something like this:</p>
+
+<blockquote>
+<b>gcc hello.c -ltk8.0 -ltcl8.0 -L/usr/X11R6/lib -lX11 -lm -ldl</b>
+</blockquote>
+
+<p>The above works on RedHat Linux.  If you are using Cygwin version 20 on
+a Windows machine, the following command is what you need:</p>
+
+<blockquote>
+<b>gcc hello.c -ltk80 -ltcl80 -lm -mwindows</b>
+</blockquote>
+
+<p>Other platforms will have slightly different variations.
+But the basic recipe is simple:  Start with the name of your C compiler
+(<b>gcc</b> in the example) and add to this the name of all your C
+or C++ source
+files.  (We have none for this example.)
+Then add on the name of the application initialization file:
+<b>hello.c</b>.
+Next, add on all those library directives that you wrote down
+<a href="#RecordLibraries">above</a> when you were compiling Tcl/Tk.
+Finally, press return and wait for the compiler to do its thing.</p>
+
+<p>The result is your executable in a file named <b>a.out</b> 
+(or <b>a.exe</b> if you are using Cygwin on Windows.)  Type</p>
+
+<blockquote><b>./a.out</b></blockquote>
+
+<p>to give it a try (or double click the <b>a.exe</b> icon if you
+are using Windows.)</p>
+
+<a name="toc5"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc5">If You Are Having Trouble
+</a></h2>
+
+<p><a name="toc5">Are you having difficulty getting your first mktclapp program to compile
+or run?
+This section is designed to help you fix the problem.</a></p>
+
+<p><a name="toc5"><img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/righthand.jpg" align="left">
+<b>Problem:</b> 
+The compiler complains that it can't find library <i>ABC</i>.<br clear="all"></a></p>
+
+<p><a name="toc5">First, make sure you entered the library options to the compiler exactly
+as they were used when compiling Tcl/Tk.  See the
+discussion </a><a href="#RecordLibraries">above</a> for details.</p>
+
+<p>If it still doesn't work, it may be because your a compiling in a different
+directory from the one in which Tcl/Tk was built.  Try adding a 
+couple of <b>-L</b>
+options to the beginning of the library switches that defines the directories
+that contain your Tcl and Tk libraries.  Perhaps something like this:</p>
+
+<blockquote>
+<b>gcc appinit.c -L../tk8.0.3/unix -ltk8.0 -L../tcl8.0.3/unix/ \<br>
+    -ltcl8.0 -L/usr/X11R6/lib -lX11 -lm -ldl</b>
+</blockquote>
+
+<p>The <b>-L</b> option tells the compiler what directories to look in for
+the libraries you specify.  The compiler is often able to figure out
+these directories on its own, but sometimes you have to give it hints.</p>
+
+<p>If that still isn't working, try typing the filename of the libraries
+themselves instead of using the <b>-l</b> options.  Like this:</p>
+
+<blockquote>
+<b>gcc appinit.c ../tk8.0.3/unix/libtk8.0.a ../tcl8.0.3/unix/libtcl8.0.a \<br>
+    -L/usr/X11R6/lib -lX11 -lm -ldl</b>
+</blockquote>
+
+<p>
+<img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/righthand.jpg" align="left">
+<b>Problem:</b> 
+The program compiles, but when I try to run it a message
+says that Tcl/Tk was installed incorrectly.<br clear="all"></p>
+
+<p>This problem can arise if you have two or more incompatible versions of 
+Tcl/Tk installed on your development machine.  The error message occurs 
+when you try to use the C library from one version of Tcl/Tk and the Tcl/Tk
+Script Library from an incompatible version.</p>
+
+<p>A quick fix is to set your TCL_LIBRARY and TK_LIBRARY environment variables
+to point to the appropriate versions of the Tcl/Tk Library scripts for the
+version of the C library you are using.  If you are using the C library
+at <b>../tk8.0.3/unix/libtk8.0.a</b>, then an appropriate setting for
+the TK_LIBRARY environment variable would be <b>../tk8.0.3/library</b>.
+The TCL_LIBRARY variable is set analogously.</p>
+
+<p>A more permanent fix (and one that you should use for all your
+deliverables) is to make your program standalone.  To do this, change
+the "Standalone?" option on the Settings page of xmktclapp.tcl to either
+"Yes" or "Strict".
+Then go to the "Libraries" page and enter an appropriate path for both
+your Tcl and your Tk script libraries.  These paths will be exactly the
+same paths you used for the TCL_LIBRARY and TK_LIBRARY environment varibles
+in the quick fix described by the previous paragraph.  Then press
+the "Build" button, exit xmktclapp.tcl, and recompile.</p>
+
+<p>This problem occurs most often on Windows because people tend to
+have two versions of Tcl/Tk installed there.  There is probably a
+binary release of Tcl/Tk installed and the version of Tcl/Tk that
+came with the Cygwin compile.  If this is your situation, you need
+to make absolutely sure that the Tcl/Tk Libraries you are using come
+from the Cygwin compiler release and not the other Tcl/Tk installation.</p>
+
+<p><img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/righthand.jpg" align="left">
+<b>Problem:</b> On windows, I double click on the program icon, but
+nothing happens.<br clear="all"></p>
+
+<p>This could be one of several things.  Mostly likely it is because Windows
+cannot find the right DLLs to run your program.  You need to make a
+copy of the following three files from the "bin" directory of your
+Cygwin installation into the same directory where your new executable
+is found:
+</p><ul>
+<li> <b>cygwin1.dll</b>  (or <b>cygwin19.dll</b> under Cygwin version 19)
+</li><li> <b>cygtcl80.dll</b>
+</li><li> <b>cygtk80.dll</b>
+</li></ul>
+If putting these three files in the same directory as the executable
+doesn't help, then try running the program manually from the Cygwin
+shell prompt.  You might get a better error message then.  If you
+still cannot figure out what is going wrong, try using the remedy to
+the previous problem -- make the program standalone and/or set your
+TCL_LIBRARY and TK_LIBRARY environment variables.  If all else fails,
+run your program in the debugger to see where it is going astray.<p></p>
+
+<p><img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/righthand.jpg" align="left">
+<b>Problem:</b> When I compile using the Cygwin compiler I get an error
+message that says "cannot find entry symbol _winMainCRTStartup".
+<br clear="all"></p>
+
+<p>The Cygwin compiler always gives this error message when you compile
+using the "-mwindows" option.  But it isn't really an error.  If you
+didn't see any other error messages then you executable should still
+work.</p>
+
+<a name="toc6"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc6">Adding More Tcl Code
+</a></h2>
+
+<p><a name="toc6">Now let's consider the case where your program consists of two
+or more Tcl files.  Typically the way this works is that the
+first Tcl file (the "main" Tcl file) uses the "source" command of
+Tcl to load the contents of all the other Tcl files.</a></p>
+
+<p><a name="toc6">Suppose, for example, we what to add ballon help to the "Hello World"
+program we constructed above.  I like to use
+</a><a href="mailto:d.roche@lectra.com">Daniel Roche's</a> excellent
+<b>balloon.tcl</b> code.  You can get a copy directly from
+Daniel's website at</p>
+
+<blockquote>
+<a href="http://www.multimania.com/droche/tkballoon/index.html">
+http://www.multimania.com/droche/tkballoon/index.html</a>
+</blockquote>
+
+<p>Or you can grab a <a href="http://www.hwaci.com/sw/mktclapp/balloon.tcl">mirrored copy</a> directly
+from the mktclapp website.
+However you get it, add in
+the <b>balloon.tcl</b> package by altering <b>hello.tcl</b>
+to look something like this:</p>
+
+<blockquote><pre><b>source balloon.tcl
+button .b -text Go -command Hello
+set_balloon .b {Press for a new window}
+button .e -text Quit -command exit
+set_balloon .e {Exit this program}
+pack .b .e -side left
+proc Hello {} {
+  catch {destroy .hi}
+  toplevel .hi
+  button .hi.b -text {Hello, World!} -command {destroy .hi}
+  set_balloon .hi.b {Make this window disappear}
+  pack .hi.b
+}</b>
+</pre></blockquote>
+
+<p>The key thing you need to notice 
+is the first line.  We are using the "source"
+command of Tcl to load in the balloon package.  (We also added
+various calls to "set_balloon".
+But that isn't the point of this exercise.  You should
+focus on the "source" command on the first line of the script.)</p>
+
+<p>In a normal Tcl script, the "source" command looks to the disk,
+finds the file named in its argument, and read the text of that
+file in as a Tcl script.  But with
+mktclapp, the "source" command works a little differently.
+With mktclapp, the "source" command first checks to see if the
+file named in the argument has been compiled into the executable.
+If the named file is part of the executable, then it is executed
+directly out of memory, not off of the disk.  This feature is
+the magic of mktclapp.  It eliminates the need to have various
+Tcl scripts on the local disk drive and thus allows you to build a
+standalone application.</p>
+
+<p>To compile our revised program, bring up xmktclapp.tcl again
+and add the <b>balloon.tcl</b> file to the "Tcl Scripts" page.
+When you are done, it should look something like this:</p>
+
+<p></p><center>
+<img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/xmta-fig5.jpg" alt="unnumbered figure">
+</center><p>
+
+</p><p>Notice that both Tcl source files, <b>hello.c</b> and 
+<b>balloon.tcl</b>, are listed in the top listbox.  This means
+both files will be compiled into the executable as strings.
+But <b>hello.tcl</b> is still the main script, the script that
+runs first and gets everything else running, so it alone is
+shown below in the "Startup Script" entry.</p>
+
+<p>After you get xmktclapp.tcl to look like the figure above, use
+the File/Build menu option to construct the <b>hello.c</b> and
+<b>hello.h</b> output files.  Then recompile the example
+program just like we did above.</p>
+
+<blockquote>
+<b>gcc hello.c -ltk80 -ltcl80 -lm -mwindows</b>
+</blockquote>
+
+<p>The result is a executable named <b>a.exe</b> (or
+<b>a.out</b> on Unix) that contains both the <b>hello.tcl</b>
+and <b>balloon.tcl</b> scripts built in.  You can run this
+program and it will "source" the balloon.tcl script even if
+the balloon.tcl script doesn't really exist on the target
+machine.</p>
+
+<a name="toc7"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc7">Making The Program Standalone
+</a></h2>
+
+<p><a name="toc7">The programs we built above do not depend on the files <b>hello.tcl</b>
+and <b>balloon.tcl</b>.  The contents of those files have been compiled
+into the executable, so the program will run on machines that do have
+those files resident.  But the program still will not run on machines
+that do not have Tcl/Tk installed.  This is because every Tcl/Tk
+program depends on a couple dozen Tcl script files that are part
+of the Tcl/Tk installation.  These files are sometimes call "Tcl/Tk
+Initialization Scripts" or the "Tcl/Tk Library".</a></p>
+
+<p><a name="toc7">You can see a list of the Tcl/Tk Library scripts on your machine
+be starting up a copy of "wish" and entering the following command:</a></p>
+
+<blockquote><pre><a name="toc7"><b>lsort [concat [glob $tcl_library/*] [glob $tk_library/*]]
+</b></a></pre></blockquote>
+
+<p><a name="toc7">If you have more than one version of Tcl/Tk installed on your
+machine, then you will have more than one Tcl/Tk Library.  On
+my main development machine, I have both Tk7.6 and Tk8.0 installed.
+So I will get a different response to the above command depending
+on whether I run "wish" or "wish8.0".</a></p>
+
+<p><a name="toc7">Here's the issue:  In order to make your programs completely standalone,
+so that they will run on machines that do not have Tcl/Tk installed, you
+have to make sure all of the Tcl/Tk Library scripts are compiled in.</a></p>
+
+<p><a name="toc7">To accomplish this goal,
+all you have to do is enter the name of
+the directories that contain your Tcl and Tk libraries on the
+"Libraries" page of xmktclapp.tcl, then on the "Settings" page set
+Standalone to either "Yes" or "Strict".
+When you do this, all the Tcl/Tk Library scripts will be added to your
+program automatically.</a></p>
+
+<p><a name="toc7">You may want to avoid making your program standalone during early
+development.  There are a lot of Tcl/Tk Library scripts.  Their
+total size approaches a half megabyte.  Your code will compile a lot
+faster if you leave them out at the beginning.  Just be sure to
+include the library scripts before you ship your program so that
+people that do not have Tcl/Tk installed will be able to run your
+code.</a></p>
+
+<p><a name="toc7">There's more: To be truely standalone, your program should also
+be statically linked.  This means you will need to link against
+static libraries for Tcl and Tk instead of the usual shared libraries.
+Otherwise, your program will not run on machines that do not have
+the Tcl/Tk shared libraries installed.</a></p>
+
+<p><a name="toc7">On Unix systems, the usual way to link against static libraries
+is to add an option like <b>-static</b> or perhaps <b>-Bstatic</b>
+to the last compiler command line.  This will do the trick if
+static libraries are available on your system.  If static libraries
+are not available, you may need to recompile Tcl/Tk to generate
+them.  You might also need to specify the name of the static
+library directly, as in <b>../tcl8.0/unix/libtcl.a</b> instead
+of using the "-l" option like this: <b>-ltcl8.0</b>.
+Most Unix systems have an "ldd" command which will tell you what
+shared libraries a program needs.  Do whatever it takes to get
+this list down to only those libraries you know will be on
+every system.</a></p>
+
+<p><a name="toc7">You may notice that statically linking your program
+causes it to be much larger.  A typical
+"Hello, World" Tk program will grow to be a couple of megabytes
+or more in size.  It takes a lot longer to compile, and uses
+more disk space.  So, again, you might want to hold
+off on making your program fully standalone until just before
+final testing and delivery.</a></p>
+
+<p><a name="toc7">Statically linking a program on Windows is more problematic.
+I usually deal with the problem by ignoring it altogether.
+For Windows builds, I just ship the resulting EXE file together
+with the DLLs it needs in the same directory on a CD-ROM.
+This works on Windows because Windows programs look for the
+DLLs they need in the same directory as the EXE file.
+(Unix systems do not work this way for security reasons.  Windows
+can get away with it because it has no security, other than
+the fact that it is a single-user operating system.)
+After you compile your EXE on Windows, you can find out what
+DLLs it needs using this command:</a></p>
+
+<blockquote><pre><a name="toc7"><b>objdump -p a.exe | grep DLL
+</b></a></pre></blockquote>
+
+<p><a name="toc7">The <b>kernel32.dll</b> file is part of Windows and doesn't need
+to be included with your program.  I typically ship with just
+these extra DLLs: <b>cygwin1.dll</b>, <b>cygtcl80.dll</b> and
+<b>cygtk80.dll</b>.</a></p>
+
+<a name="toc8"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc8">Common Mistakes
+</a></h2>
+
+<p><a name="toc8">Here are some mistakes people commonly make when
+they are first beginning to use mktclapp.  
+Take care to avoid these mistakes yourself.</a></p>
+
+<ul>
+<p></p><li>
+<a name="toc8">     The name of the argument to the "source" command must
+     match exactly, character-for-character, the name that
+     appears in the upper "Tcl Scripts" listbox of xmktclapp.tcl.
+     If xmktclapp.tcl shows an absolute pathname, then you
+     should give an absolute pathname when you "source" the
+     file.  If the name in the listbox is relative, then the
+     argument to "source" must be relative.
+     Note also that case is significant.  Even though
+     Windows will match names with differing case, mktclapp
+     uses the strcmp() function from the C library to compare
+     names, so the names really do have to be identical.</a></li><p></p>
+
+<p></p><li><a name="toc8"> 
+     Be sure that every file that you "source" really is listed
+     on the "Tcl Scripts" page.  If a file isn't listed in
+     "Tcl Scripts" your program will fall back and read it from the disk
+     on your development machine.  But when you move the program
+     to a different computer, that script won't be there anymore
+     and the program will fail.
+
+     </a><p><a name="toc8">You can guard against this error by setting the Standalone
+     option on the "Settings" page to "Strict".  In strict mode,
+     the "source" command of mktclapp will check for built-in files,
+     but if it doesn't find one it won't fall back to the disk.
+     Instead it just returns an error.</a></p>
+
+<p></p></li><li><a name="toc8"> 
+     Be sure to include your main script (the Tcl script that
+     runs first) both in the upper listbox and the lower entry
+     box on the "Tcl Scripts" page.  It has to be in both places.</a></li>
+<a name="toc8">     
+</a><p></p><li>
+<a name="toc8">     In order to conserve memory and run faster, mktclapp tries
+     to remove comments and extra whitespace from the Tcl scripts
+     before it compiles them into the program.  But on some rare
+     occasions, these changes can break scripts.  If you are having
+     problems, try turning off the comment removal and see if that
+     helps.  To turn off comment removal for a particular script,
+     click on the script so that it is highlighted, then press
+     the "Don't Strip Comments" button.</a></li><p></p>
+
+<p></p><li>
+<a name="toc8">     When you set Standalone to "Yes" or "Strict", the two Tcl/Tk
+     Library directories specified on the Libraries page of
+     xmktclapp.tcl must be compatible with each other and with
+     the Tcl/Tk C library that you link against.  If this isn't
+     the case, the Tcl/Tk initialization will fail and your
+     program will not run.  </a></li><p></p>
+</ul>
+
+<a name="addingccode">
+</a><a name="toc9"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc9">Adding In Some C Code
+</a></h2>
+
+<p><a name="toc9">We've seen how to link Tcl/Tk scripts into your program.  Now let's look
+at how you can add in some C or C++ code.</a></p>
+
+<p><a name="toc9">As an example, create a C source code file named <b>hw.c</b> and
+put in the following text.  (Omit the line numbers.  They are for
+reference only.)</a></p>
+
+<a name="code1">
+</a><blockquote><pre><a name="code1"><b>0001 /* A C module */
+0002 #include &lt;stdio.h&gt;
+0003 #include "hello.h"
+0004 
+0005 int ET_COMMAND_print_hello(ET_TCLARGS){
+0006   printf("Hello, out there!\n");
+0007   return TCL_OK;
+0008 }
+</b></a></pre></blockquote>
+
+<p><a name="code1">To compile this C module into your program, bring up xmktclapp.tcl
+again and go to the C/C++ Modules page.  Click on the Insert button
+and select "hw.c" from the menu.  The C/C++ Modules pages should
+look like figure 4.</a></p>
+
+<p>
+<a name="fig4">
+</a></p><hr><center><a name="fig4"><img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/xmta-fig4.jpg" alt="Figure 4"><br>
+<b>Figure 4</b></a></center><a name="fig4"><br></a><hr><p></p>
+
+<p><a name="fig4">Next return to the Settings page, press the "Build" button and
+exit.</a></p>
+
+<p><a name="fig4">The C code in the hw.c file implements a new Tcl command named
+<b>print_hello</b>.  Adding the name of the C source code file
+to the C/C++ Modules page of xmktclapp.tcl instructs mktclapp to
+scan the source code looking for function definitions of the
+the form</a></p>
+
+<blockquote><pre><a name="fig4"><b>int ET_COMMAND_aaaaa(ET_TCLARGS){
+  ...
+  return TCL_OK;
+}
+</b></a></pre></blockquote>
+
+<p><a name="fig4">where the string "aaaaa" in the function name can be any valid
+C identifier.  For every such function found, mktclapp will create
+a new Tcl command named "aaaaa".  And whenever that Tcl command
+is invoked from within a script, the function will be called.</a></p>
+
+<p><a name="fig4">This is one of the primary means of communication between the
+C/C++ side of your application and the Tcl/Tk scripts.  Whenever
+you want your Tcl/Tk script to execute some C code, you put the
+C code inside a function whose name begins 
+with "ET_COMMAND_".  The C code can then be executed by calling
+the Tcl command whose name matches the suffix of the new C function.</a></p>
+
+<p><a name="fig4">In our example, we've created a new Tcl command named "print_hello",
+but that command is never being called.  Let's modify the "hello.tcl"
+script a bit to change that.  Edit hello.tcl so that it looks like
+this:</a></p>
+
+<blockquote><pre><a name="fig4"><b>button .b -text Go -command print_hello
+button .e -text Quit -command exit
+pack .b .e -side left
+</b></a></pre></blockquote>
+<a name="fig4">After making this edit, rerun xmktclapp.tcl and press the "Build" button
+again in order to rebuild the application initialization module.
+Then recompile everything as follows:
+</a><blockquote><pre><a name="fig4"><b>gcc -o hello2 hw.c hello.c -ltk8.0 -ltcl8.0 -L/usr/X11R6/lib -lX11 -lm -ldl
+</b></a></pre></blockquote>
+
+<p><a name="fig4">Notice that we now have to add the "hw.c" file to the compiler command
+line.  If you have a lot of C source files, it is probably best to
+construct a Makefile that compiles each C modules separately then
+links them all together in the end.  Like this:</a></p>
+
+<blockquote><pre><a name="fig4"><b>gcc -c hw.c
+gcc -c hello.c
+gcc -o hello hw.o hello.o -ltk8.0 -ltcl8.0 -L/usr/X11R6/lib -lX11 -lm -ldl
+</b></a></pre></blockquote>
+
+<p><a name="fig4">That way, there is less to recompile if you make changes to a subset of
+your C modules.</a></p>
+
+<p><a name="fig4">Now run the program.  Click on the "Print" button and verify that the
+message "Hello, out there!" is printed on standard output. 
+(Note that "printf" is a no-op on Windows.  If you want to try
+this example in Windows, you'll need to alter hw.c to write its
+message to a file that you explicitly open instead of 
+writing to standard output.)</a></p>
+
+<a name="toc10"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc10">Implementing New Tcl Commands In C
+</a></h2>
+
+<p><a name="toc10">If you've never looked at Tcl's C API before, then you need to
+take note of the interface details for a function that implements
+a Tcl command.
+The first thing to notice is that the function must return an
+integer result code.
+</a><a name="retcode">
+This result code must be one of the following values:</a></p>
+
+<ul>
+<p></p><li><a name="retcode"> <b>TCL_OK</b>.
+     This means the command completed successfully.</a><p></p>
+
+<p></p></li><li><a name="retcode"> <b>TCL_ERROR</b>.
+     This means that an error occurred while executing the 
+     command.  In this case, the result string that is returned is
+     an error message describing what when wrong.</a><p></p>
+
+<p></p></li><li><a name="retcode"> <b>TCL_RETURN</b>.
+     This means that the interpreter should immediately return
+     from the Tcl procedure it is currently executing.  Returning this
+     value from a C function is the same as executing the <b>return</b>
+     command in Tcl.</a><p></p>
+
+<p></p></li><li><a name="retcode"> <b>TCL_BREAK</b>.
+     This means that the interpreter should immediately exit
+     the inner-most loop that is currently active.  This is the same as
+     executing the <b>break</b> command in Tcl.</a><p></p>
+
+<p></p></li><li><a name="retcode"> <b>TCL_CONTINUE</b>.
+     This means that the interpreter should skip the rest of
+     the body of the inner-most loop and continue with the next iteration
+     of that loop.  This is the same as the <b>continue</b> command in Tcl.</a><p></p>
+</li></ul>
+
+<p><a name="retcode">In practice, you rarely ever use any but the first two values,
+TCL_OK and TCL_ERROR.
+All of these values are really integers.  The symbolic
+names given here are for C preprocessor macros that evaluate to the
+appropriate integer.  You should make it a habit to always use the
+symbolic name rather than the raw integer value in your code.
+The symbolic names are defined in the include file &lt;tcl.h&gt; which
+is included by the header file that mktclapp generates.  In the
+code example </a><a href="#code1">above</a>, line 0003 includes the
+header file that mktclapp generates and hence the &lt;tcl.h&gt; file gets
+included and the symbolic names for the return values are defined.</p>
+
+<p>The second thing to notice about C functions that implement Tcl commands
+is that they require exactly four parameters, as follows:</p>
+
+     <ul>
+     <li> <b>ClientData clientData</b>
+     </li><li> <b>Tcl_Interp *interp</b>
+     </li><li> <b>int argc</b>
+     </li><li> <b>char **argv</b>
+     </li></ul>
+
+<p>The <b>interp</b> parameter is a pointer to the Tcl interpreter.  The
+<b>argc</b> and <b>argv</b> parameters contain, respectively, the
+number of arguments to the Tcl command and the text of each argument.
+For Tcl commands created automatically by mktclapp, the <b>clientData</b>
+parameter is always NULL.</p>
+
+<p>It can be a chore to type in all four parameters
+to every C function that implements a Tcl command.
+Every such C function takes exactly the same four parameters.
+So as a convenience, mktclapp supplies a macro named <b>ET_TCLARGS</b>
+which contains the appropriate parameter definitions.  Mktclapp
+writes this macro into the header file it generates.  In the case of our
+example, the file is called <b>hello.h</b>.  Notice again that we
+include this file on line 0003 of the <a href="#code1">C code above</a>
+so we are able to take the shortcut of using the macro.</p>
+
+<p>The third important point about C functions that implement Tcl commands
+is how they return their results.  By default, a Tcl command will
+return an empty string.  But you can specify an different result using
+one or more of the following Tcl API functions:</p>
+
+<p></p><ul>
+<li> <b>Tcl_SetResult</b>
+</li><li> <b>Tcl_AppendResult</b>
+</li><li> <b>Tcl_AppendElement</b>
+</li><li> <b>Tcl_ResetResult</b>
+</li></ul><p></p>
+
+<p>The operation of these functions is well documented in the
+Tcl manpages, and will not be repeated here.</p>
+
+<p>Mktclapp provides another method for setting the return value of
+a Tcl command that is sometimes easier to use than the standard
+Tcl API functions.  This is the function named <b>Et_ResultF()</b>.
+The Et_ResultF function works very much like printf() from the 
+standard C library.  You give it a format string and a variable number
+of additional arguments whose values are substituted into specified
+places of the format string.  But while printf() writes its result
+on standard output, Et_ResultF puts its result into the return value
+of the Tcl command.</p>
+
+<p>An example will help to illustrate how Et_ResultF() works.  Let's
+implement a Tcl command that adds the value of two arguments and
+returns the result.  The file that will contain this new command
+will be <b>add.c</b>.  The code looks like this:</p>
+
+<blockquote><pre><b>0001 /* Add two numbers and return the result */
+0002 #include "hello.h"
+0003
+0004 int ET_COMMAND_add(ET_TCLARGS){
+0005   if( argc!=3 ){
+0006     Et_ResultF(interp, "wrong # args: should be \"%s NUM1 NUM2\"",argv[0]);
+0007     return TCL_ERROR;
+0008   }
+0009   Et_ResultF(interp,"%d", atoi(argv[1]) + atoi(argv[2]));
+0010   return TCL_OK;
+0011 }
+</b></pre></blockquote>
+
+<p>If you want to test this routine out, add the "add.c" file to the list
+of C/C++ Modules in xmktclapp.tcl, make some changes to "hello.tcl" that will
+call the new "add" Tcl command, and recompile.  By now, you should be
+comfortable with doing this kind of thing, so we won't go into the details,
+but will instead focus on describing how the code works.</p>
+
+<p>Line 0002 of add.c includes the header file that mktclapp generated for us.
+This header file contains a prototype for the Et_ResultF() function, and it
+includes the &lt;tcl.h&gt; header file so that we can access macros like
+TCL_OK and TCL_ERROR.</p>
+
+<p>The implementation of the new "add" Tcl command is on lines 0004 through
+0011.  Lines 0005 through 0008 check to make sure the command is given
+exactly 2 arguments.  Notice that we compare the argument count in
+<b>argc</b> to 3 instead of 2.  That is because <b>argc</b> contains the
+number of arguments to the command, including the name of the command
+itself.  If the number of arguments is not 2, then we will return an
+error condition (line 0007) but first we have to set the return value to
+be an appropriate error message.  The call to Et_ResultF() on line
+0006 does this.  The first argument is a pointer to the Tcl interpreter.
+The second argument is a format string.  Additional arguments are added
+as required by the format string.</p>
+
+<p>If the number of arguments is correct, we fall through to lines 0009 and
+0010.  The return value is set by the Et_ResultF() call in line 0009.
+Since the command succeeded in this case, we return TCL_OK on line 0010.</p>
+
+<a name="toc11"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc11">Using The Tcl_Obj Interface For Tcl New Commands
+</a></h2>
+
+<p><a name="toc11">Beginning with version 8.0, Tcl/Tk supports a new interface to commands
+that is faster in some circumstances.  We won't go into the details
+of how the new interface works.  (You can get that information from
+the Tcl/Tk documentation) 
+But we would like to point out that mktclapp
+can create Tcl commands that use the new Tcl_Obj interface.
+All you have to do is preface the name of your function with
+ET_OBJCOMMAND instead of ET_COMMAND, and use ET_OBJARGS instead
+of ET_TCLARGS as the argument.  So instead of</a></p>
+
+<blockquote><pre><a name="toc11"><b>int ET_COMMAND_print_hello(ET_TCLARGS){
+   printf("Hello, out there!\n");
+   return TCL_OK;
+}
+</b></a></pre></blockquote>
+
+<p><a name="toc11">write code like this:</a></p>
+
+<blockquote><pre><a name="toc11"><b>int ET_OBJCOMMAND_print_hello(ET_OBJARGS){
+   printf("Hello, out there!\n");
+   return TCL_OK;
+}
+</b></a></pre></blockquote>
+
+<p><a name="toc11">The new Tcl_Obj command interface is a little faster, but
+not that much faster.  The big advantage to the Tcl_Obj interface
+is that it cleanly handles binary data.  The main disadvantage is
+that the Tcl_Obj interface is harder to use.  I recommend using
+the Tcl_Obj interface only for commands that deal with binary data
+and continuing to use the older string interface for all other
+commands.</a></p>
+
+<a name="toc12"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc12">Using Tcl Namespaces
+</a></h2>
+
+<p><a name="toc12">The names of C functions may contain only alphanumeric and
+underscore characters.  But in order to generate a Tcl command in
+a namespace, you need to embed colons in the name.
+To accomodate this, whenever mktclapp sees an ET_COMMAND_ function
+name that contains two underscores in a row, it changes both
+underscores to colons in the corresponding Tcl command.
+This allows you to create new Tcl commands in a namespace.</a></p>
+
+<p><a name="toc12">For example, suppose you wanted to created a new Tcl command
+named <b>ns1::func1</b>.  Your C code would look something like
+this:</a></p>
+
+<blockquote><pre><a name="toc12"><b>int ET_COMMAND_ns1__func1(ET_TCLARGS){
+  ...
+  return TCL_OK;
+}
+</b></a></pre></blockquote>
+
+<p><a name="toc12">The two underscores between "ns1" and "func1" in the C function
+name will be converted into colons for the corresponding Tcl command,
+thus giving the desired result.</a></p>
+
+<a name="toc13"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc13">Executing Tcl/Tk Commands From C Code
+</a></h2>
+
+<p><a name="toc13">The previous sections described how you can transfer control from
+Tcl/Tk over to C.  Now let's see how to go the other direction: how
+to execute Tcl/Tk code from within a C function.</a></p>
+
+<p><a name="toc13">The Tcl API provides several functions that will cause a string
+to be interpreted as a Tcl/Tk script.  We find:</a></p>
+
+<p></p><ul>
+<li><a name="toc13"> <b>Tcl_Eval</b>
+</a></li><li><a name="toc13"> <b>Tcl_VarEval</b>
+</a></li><li><a name="toc13"> <b>Tcl_GlobalEval</b>
+</a></li><li><a name="toc13"> <b>Tcl_EvalFile</b>
+</a></li></ul><p></p>
+
+<p><a name="toc13">All of these functions are fully documented by the Tcl manpages,
+so we won't go into a lot of detail here about how they work.  But
+a quick example won't hurt.</a></p>
+
+<p><a name="toc13">Consider the Tcl_Eval() function.  This function takes two argument.
+</a></p><ol>
+<li><a name="toc13"> A pointer to a Tcl interpreter, and
+</a></li><li><a name="toc13"> A string that contains Tcl code to be executed.
+</a></li></ol>
+<a name="toc13">The Tcl_Eval() function returns an integer which is one of the
+return codes (TCL_OK, TCL_ERROR, etc.) described
+</a><a href="#retcode">above.</a>.  The way Tcl_Eval() works is
+this: it breaks up the string you give it into one or more
+Tcl commands.  It parses each command up into a command name
+and its arguments.  It then calls a C function to execute that
+command.  If the C function returns TCL_OK, then Tcl_Eval() procedes
+to execute the next command in the sequence.  And so forth until
+all commands have been executed.  But if any implementation
+function returns something other than TCL_OK, the commands
+that follow are skipped and Tcl_Eval() returns immediately.
+The return code of Tcl_Eval() is always the return code of
+the last command executed. The result of the last Tcl
+command executed (or the error message if TCL_ERROR is returned)
+is stored in <b>interp-&gt;result</b> where <b>interp</b> is the
+pointer to the Tcl interpreter.<p></p>
+
+<p>We will illustrate the use of Tcl_Eval() by implementing a Tcl
+command in C that invokes another Tcl command as part of its
+execution.  Call our example command <b>factor</b>.  It has
+two argument.</p>
+
+<blockquote>
+<b>factor</b>   <i>NUMBER    PROC</i>
+</blockquote>
+
+<p>The factor command will compute all factors of <i>NUMBER</i> and
+for each factor <i>F</i> it will invoke the Tcl procedure
+named <i>PROC</i> with a single argument <i>F</i>.
+So, for example, if we execute the command</p>
+
+<blockquote><pre><b>factor 12 puts</b>
+</pre></blockquote>
+
+<p>the implementation of factor will invoke the <b>puts</b> Tcl command
+six times, once each with the arguments "1", "2", "3", "4", "6" and "12".</p>
+
+<a name="code2">
+</a><blockquote><pre><a name="code2"><b>0001 /* Implementation of the factor command */
+0002 #include "hello.h"
+0003
+0004 int ET_COMMAND_factor(ET_TCLARGS){
+0005   int i, n;
+0006   char *zCmd;
+0007   if( argc!=3 ){
+0008     Et_ResultF(interp,"wrong # args: should be \"%s NUM PROC\"",argv[0]);
+0009     return TCL_ERROR;
+0010   }
+0011   zCmd = Tcl_Alloc( strlen(argv[2]) + 100 );
+0012   if( zCmd==0 ){
+0013     Et_ResultF(interp,"out of memory");
+0014     return TCL_ERROR;
+0015   }
+0016   n = atoi(argv[1]);
+0017   for(i=1; i&lt;=n; i++){
+0018     if( (n/i)*i!=n ) continue;
+0019     sprintf(zCmd, "%s %d", argv[2], i);
+0020     if( Tcl_Eval(interp, zCmd)!=TCL_OK ){
+0021       Tcl_Free(zCmd);
+0022       return TCL_ERROR;
+0023     }
+0024   }
+0025   Tcl_Free(zCmd);
+0026   return TCL_OK;
+0027 }
+</b></a></pre></blockquote>
+
+<p><a name="code2">Let's have a look at the code.  We begin, as always, by including
+the necessary header files on line 0002.  The rest of the code is
+an implementation of the "factor" Tcl command on lines 0004 through
+0027.  The first thing the factor command does is make sure it was
+called with exactly two arguments.  If not, an error message is
+created and the function returns with an error.  Next, on line 0011,
+we allocate space to hold the Tcl commands that we will execute for
+each factor.  We have to dynamically allocate this space, since we
+cannot know in advance how big the name of the callback procedure 
+will be.  The Tcl library imposes no length limitations on
+strings and you should strive to do the same with the
+code you add.</a></p>
+
+<p><a name="code2">The loop from lines 0017 to 0024 iterates over all values between
+1 and the target number, and line 0018 discards those that are
+not factors.  (This is not a very efficient way to compute the
+factors of a number, by the way.  But a better
+algorithm would require considerably more code which would obsure
+the point of the example.)  On line 0019, we construct the text of
+a Tcl command to execute for the single factor in the variable <b>i</b>.
+Then the command is executed using Tcl_Eval on line 0020.  Notice
+that we test to make sure Tcl_Eval returns TCL_OK, and we abort
+immediately if it does not.  Finally, after the loop exits, we
+free the dynamically allocated memory and return successfully.</a></p>
+
+<p><a name="code2">You will notice in this example that a considerable amount of code
+was used to dynamically allocate space for the Tcl command that
+was to be executed.  A lot of this extra could can be avoided by
+using a special function provided by mktclapp that does the same
+work as Tcl_Eval, but with more flexible calling parameters.
+The <b>Et_EvalF</b> function executes Tcl code like Tcl_Eval, but
+it constructs the Tcl code using printf-style arguments.  Take
+a look at the same "factor" command coded using Et_EvalF instead
+of Tcl_Eval:</a></p>
+
+<a name="code3">
+</a><blockquote><pre><a name="code3"><b>0001 /* Implementation of the factor command */
+0002 #include "hello.h"
+0003
+0004 int ET_COMMAND_factor(ET_TCLARGS){
+0005   int i, n;
+0006   if( argc!=3 ){
+0007     Et_ResultF(interp,"wrong # args: should be \"%s NUM PROC\"",argv[0]);
+0008     return TCL_ERROR;
+0009   }
+0010   n = atoi(argv[1]);
+0011   for(i=1; i&lt;=n; i++){
+0012     if( (n/i)*i!=n ) continue;
+0013     if( Et_EvalF(interp, "%s %d", argv[2], i)!=TCL_OK ){
+0014       return TCL_ERROR;
+0015     }
+0016   }
+0017   return TCL_OK;
+0018 }
+</b></a></pre></blockquote>
+
+<p><a name="code3">What a difference!  The use of Et_EvalF reduced the size of the
+factor command by one third.  It also helped reduce
+the danger of memory leaks that would result if (for example) line
+0021 were accidently omitted from the Tcl_Eval implementation.  Et_EvalF
+executes Tcl code in the same way as Tcl_Eval, but with a much more
+convenient interface.  Experience with Et_EvalF shows
+it can greatly decrease coding effort and the number of coding errors.</a></p>
+
+<a name="toc14"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc14">Other Functions Provided By Mktclapp
+</a></h2>
+
+<p><a name="toc14">We've already seen two functions that are provided by mktclapp that
+do not appear in the standard Tcl library: <b>Et_ResultF</b> and
+<b>Et_EvalF</b>.  There are others which haven't been mentioned.</a></p>
+
+<ul>
+<li><a name="toc14"> </a><p><a name="toc14"><b>Et_GlobalEvalF</b>.
+     This works just like Et_EvalF, except that all variables are evaluated
+     in the global context.  Et_GlobalEvalF is to Et_EvalF what
+     Tcl_GlobalEval is to Tcl_Eval.</a></p>
+
+</li><li><a name="toc14"> </a><p><a name="toc14"><b>Et_DStringAppendF</b>.
+     This routine works like Tcl_DStringAppend with the addition that the
+     string to be appended is constructed using printf-style arguments.
+     For more information on what Tcl_DStringAppend does, refer to the
+     Tcl manpages.</a></p>
+
+</li><li><a name="toc14"> </a><p><a name="toc14"><b>mprintf</b>.
+     This helpful routine works like the <b>sprintf</b> routine from the
+     standard C library.  Except, instead of taking the buffer into which
+     the results are written as its first parameter, the mprintf routine
+     mallocs for sufficient space to hold the result and returns a pointer
+     to the malloced space.  The calling function is responsible for
+     freeing the memory to avoid a memory leak.
+     This implementation of mprintf actually
+     uses Tcl_Alloc to obtain its memory, so the memory really should
+     be freed by calling Tcl_Free.  Tcl_Alloc and Tcl_Free are fully
+     documented in the Tcl manpages.</a></p>
+
+</li><li><a name="toc14"> </a><p><a name="toc14"><b>vmprintf</b>.
+     This is a varargs version of mprintf().</a></p>
+</li></ul>
+
+<p><a name="toc14">In addition to these function, mktclapp also provides a global variable
+named <b>Et_Interp</b> which is a pointer to the main Tcl interpreter
+for your application.  A pointer to an interpreter is required as the
+first parameter to many routines in the Tcl library, as well as to
+mktclapp routines like Et_EvalF.  If your program only uses a single
+Tcl interpreter (most programs fulfill this constraint) then you can
+use the global variable <b>Et_Interp</b> rather than pass a
+pointer to the interpreter as a parameter to every C subroutine you
+write.</a></p>
+
+<a name="toc15"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc15">The <tt>%q</tt> Format Field
+</a></h2>
+
+<p><a name="toc15">There is subtle danger in using the <b>%s</b> format field within
+the Et_EvalF function and its kin.  Consider what would happen if
+the string that is inserted in place of the %s contains characters
+with special meaning to Tcl.</a></p>
+
+<p><a name="toc15">For example, suppose you have a Tcl/Tk command named <b>PopupMessage</b>
+that takes a text string as its only argument and displays that string
+as a message in a popup dialog box.  If the your C code frequently
+needs to pop up messages, you might consider writing a C subroutine
+to do the work for you, like this:</a></p>
+
+<blockquote><pre><a name="toc15"><b>void DoPopup(const char *zMsg){
+  Et_EvalF(Et_Interp,"PopupMessage \"%s\"", zMsg);
+}
+</b></a></pre></blockquote>
+
+<p><a name="toc15">If you invoke this subroutine with a message that read
+"Hello, World!", then the Et_EvalF function would construct
+a Tcl command that said</a></p>
+
+<blockquote><pre><a name="toc15"><b>PopupMessage "Hello, World!"
+</b></a></pre></blockquote>
+
+<p><a name="toc15">which would do what you intend.  But now consider what would happen
+if you invoke DoPopup with a string like this:</a></p>
+
+<blockquote><pre><a name="toc15"><b>DoPopup("Missing \";\" on line 11");
+</b></a></pre></blockquote>
+
+<p><a name="toc15">In this case, Et_EvalF would construct its Tcl command to read
+as follows:</a></p>
+
+<blockquote><pre><a name="toc15"><b>PopupMessage "Missing ";" on line 11"
+</b></a></pre></blockquote>
+
+<p><a name="toc15">And this command will not work.  The Tcl interpreter will break
+this string into two commands.  The first command will invoke 
+the PopupMessage procedure with the string "Missing ", and the
+second command will consist of the text " on line 11".  Certainly
+not what you intended.</a></p>
+
+<p><a name="toc15">You might try to work around this problem by using curly braces
+rather than double quotes to enclose the argument to PopupMessage,
+like this:</a></p>
+
+<blockquote><pre><a name="toc15"><b>void DoPopup(const char *zMsg){
+  Et_EvalF(Et_Interp,"PopupMessage {%s}", zMsg);
+}
+</b></a></pre></blockquote>
+
+<p><a name="toc15">This changes the problem, but does not make it go away.  Now the
+function fails when the input string is something like</a></p>
+
+<blockquote><pre><a name="toc15"><b>DoPopup("Missing \"}\" on line 11");
+</b></a></pre></blockquote>
+
+<p><a name="toc15">The solution to this conundrum is to never use the %s format
+directive when the string to be inserted can possibly contain
+characters that are special to Tcl.  Et_EvalF provides an
+alternative formatting directived called <b>%q</b> (the "q" stands
+for "quote") that works just like %s except that it inserts a
+backslash character before every character in the inserted string
+that has special meaning to Tcl.  So what we have to do is
+change the DoPopup function to read as follows:</a></p>
+
+<blockquote><pre><a name="toc15"><b>void DoPopup(const char *zMsg){
+  Et_EvalF(Et_Interp,"PopupMessage \"%q\"", zMsg);
+}
+</b></a></pre></blockquote>
+
+<p><a name="toc15">Now when the DoPopup function is called with an input string
+that contains special characters, like this:</a></p>
+
+<blockquote><pre><a name="toc15"><b>DoPopup("Missing \";\" on line 11");
+</b></a></pre></blockquote>
+
+<p><a name="toc15">the Tcl command that Et_EvalF constructs reads as follows:</a></p>
+
+<blockquote><pre><a name="toc15"><b>PopupMessage "Missing \";\" on line 11"
+</b></a></pre></blockquote>
+
+<p><a name="toc15">The Et_EvalF function has inserted a backslash before each double-quote
+character in the string.
+This Tcl command gives the intended result.</a></p>
+
+<p><a name="toc15">The %q formatting directive is available in all of the extension
+functions provided by mktclapp:  Et_EvalF, Et_ResultF, Et_GlobalEvalF,
+Et_DStringAppendF, mprintf, and vmprintf.
+Some general guidelines on how and when to use %q instead of %s
+follow:</a></p>
+
+<ul>
+<li><a name="toc15"> </a><p><a name="toc15">Always use %q for strings whose content can be influenced by
+     the user or by input data.  To do otherwise will open security 
+     holes in your program.</a></p>
+
+</li><li><a name="toc15"> </a><p><a name="toc15">Use %q rather than %s for any string that might contain characters
+     that are special to Tcl.</a></p>
+
+</li><li><a name="toc15"> </a><p><a name="toc15">The %q formatter does not escape spaces, so it is best to put you
+     %q inside of double-quotes.</a></p>
+
+</li><li><a name="toc15"> </a><p><a name="toc15">%q is designed for use within double-quotes, not curly braces.
+     Use the %q like this: <b>\"%q\"</b> Not like this: <b>{%q}</b>.</a></p>
+<a name="toc15">     
+</a></li></ul>
+
+<a name="toc16"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc16">Putting A  <tt>main()</tt> In Your C Code
+</a></h2>
+
+<p><a name="toc16">Every C program requires a <b>main()</b> function.  If you don't
+supply one in the C code you link with mktclapp, then mktclapp will
+put its own main() in the application initialization module that
+it builds.  
+This is the recommended practice.
+But for special circumstances, you may want to provide your own
+main() function.
+That's fine.  The code that mktclapp generates will still work.
+But you need to remember two things:</a></p>
+
+<ol>
+<li><a name="toc16"> </a><p><a name="toc16">At some point, you need to call the routine <b>Et_Init()</b>
+     and pass it the value of <b>argc</b> and <b>argv</b> from
+     main(), in order to initialize the Tcl/Tk interpreter.
+     Your code might look something like this:</a></p>
+
+<blockquote><pre><a name="toc16"><b>int main(int argc, argv){
+   /* Your code goes here */
+   Et_Init(argc, argv);
+   return 0;
+}
+</b></a></pre></blockquote>
+
+<a name="toc16">     </a><p><a name="toc16">The Et_Init() function doesn't return until the Tcl/Tk interpreter
+     has been terminated.  For a GUI application, this means it
+     never returns.  So don't put any code after your call to
+     Et_Init() that you want to execute.</a></p>
+
+</li><li><a name="toc16"> </a><p><a name="toc16">The "Fork Into Background" feature that can be optionally
+     enabled using mktclapp will not work if you supply your own
+     main() routine.</a></p>
+</li></ol>
+
+<a name="appinit">
+</a><a name="toc17"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc17">C Functions For Application Initialization
+</a></h2>
+
+<p><a name="toc17">If the C code that you link using mktclapp contains a function
+named <b>Et_AppInit()</b>, then that function will be called right
+after the Tcl/Tk interpreter has been initialized.  So if you need
+to do any additional setup to the Tcl/Tk interpreter, such
+as loading an extension, the Et_AppInit() function
+is a great place to do it.</a></p>
+
+<p><a name="toc17">For example, suppose you need to include the BLT extensions in
+your application.  You could simply add C code that looks
+like the following:</a></p>
+
+<blockquote><pre><a name="toc17"><b>0001 #include "appinit.h"
+0002 #include &lt;blt.h&gt;
+0003
+0004 int Et_AppInit(Tcl_Interp *interp){
+0005   Blt_Init(interp);
+0006   return TCL_OK;
+0007 }
+</b></a></pre></blockquote>
+
+<p><a name="toc17">Let's look more closely at this code.  Line 0001 sources the header
+file that mktclapp generates.  (Depending on what name you choose for
+the generated files, you might need to alter this line.)  We also
+need to include the header file for BLT on line 0002.  The implementation
+of Et_AppInit begins on line 0004.  Notice that it takes a single parameter
+which is a pointer to the Tcl interpreter and returns an integer.
+On Line 0005, the BLT extension is initialized.  Finally on line
+0006 we return from Et_AppInit().  Notice the Et_AppInit() should
+return TCL_OK if there were no errors.</a></p>
+
+<p><a name="toc17">Other Tcl/Tk extensions are initialized in a similar way.  To initialize
+an extension named <b>ABC</b> you typically invoke a function named 
+<b>Abc_Init(interp)</b> inside of Et_AppInit().  Refer to the 
+documentation for the particular extension you want to initialize for
+details.  Some Tcl/Tk extensions (such as TclX) include additional
+Tcl Script files that must be loaded with the application in order
+for the application to run standalone.  For these extensions, you
+will need to list those script files on the "Tcl Scripts" page of
+xmktclapp.tcl so that they will be compiled into the initialization module.
+Or (beginning with version 3.0 of mktclapp) you can list the directories
+containing the extra scripts in the "Other Libraries" entry field on
+the "Libraries" page of xmktclapp.tcl.  I'm told that you might also
+need to make some change to the "auto_path" variable in order to
+get Tix and IncrTcl to work right.  But the only major extension I ever
+use is BLT, so I can not say from personal experience.</a></p>
+
+<p><a name="toc17">The Et_AppInit() function is also a convenient place in which to
+make calls the the <b>Tcl_LinkVar</b> function in order to create
+a link between Tcl variables and C variables.  Refer to the documentation
+of the Tcl_LinkVar() function for additional information.</a></p>
+
+<p><a name="toc17">In addition to Et_AppInit(), the code generated by mktclapp will
+also call a function named <b>Et_PreInit()</b> if it is present.
+The difference between Et_AppInit() and Et_PreInit() is this:
+Et_PreInit() is called before the core Tcl/Tk modules are initialized,
+but Et_AppInit() is called afterwards.  It is very unusual to need
+to use Et_PreInit().  If you do not clearly understand the difference,
+it is safer to stick with Et_AppInit().</a></p>
+
+<a name="toc17a"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc17a">Bundling Binary Data Files With The Executable
+</a></h2>
+
+<p><a name="toc17a">The principal magic of mktclapp is that it compiles your Tcl scripts
+into the executable as static character strings.  Beginning with version
+3.8 of mktclapp, you can do the same thing with binary data files, such
+as GIFs.  Just add the name of each data file you want to insert on the
+Data Files page of the application wizard and mktclapp will add the contents
+of each file to the executable as an array of characters.  You can access
+the data file using the normal file access commands of Tcl.</a></p>
+
+<p><a name="toc17a">As an example, suppose you have the following Tcl/Tk code
+in a file named <b>ckmail.tcl</b>:</a></p>
+
+<blockquote><pre><a name="toc17a"><b>image create photo mailicon -file mailicon.gif
+button .b -image mailicon -command {exec checkmail &amp;}
+pack .b</b>
+</a></pre></blockquote>
+
+<p><a name="toc17a">This program shows a single button containing a GIF icon where the
+GIF is loaded from a separate file <b>mailicon.gif</b>.  To turn this
+script into a standalone program using mktclapp, bring up xmktclapp.tcl
+and enter the ckmail.tcl script in two places on the Tcl Scripts page.
+Then go over to the Data Files pages of xmktclapp.tcl and enter
+the name of the GIF icon.  Like this:</a></p>
+
+<p></p><center>
+<a name="toc17a"><img src="Mktclapp_%20A%20tool%20for%20building%20C_C++%20programs%20that%20use%20Tcl_Tk_files/xmta-fig6.jpg" alt="unnumbered figure">
+</a></center><p>
+
+</p><p><a name="toc17a">Then select File/Build from the menu and exit xmktclapp.tcl.  
+Mktclapp will include both
+the Tcl script ckmail.tcl and the image mailicon.gif in the
+generated application initialization file (<b>ckmail.c</b>).
+All you have to do now is compile that file.</a></p>
+
+<blockquote><pre><a name="toc17a"><b>gcc -o ckmail ckmail.c -ltk8.0 -L/usr/X11R6/lib -lX11 -ltcl8.0 -lm -ldl</b>
+</a></pre></blockquote>
+
+<p><a name="toc17a">The ability to access data files as if they were normal files on
+the disk depends on certain API functions that appeared in Tcl beginning
+with release 8.0.3.  So this feature will not work if you are using an
+earlier version of Tcl.</a></p>
+
+<a name="toc17b"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc17b">Building Tcl Extensions Using Mktclapp
+</a></h2>
+
+<p><a name="toc17b">Another new feature to mktclapp as of version 3.8 is the ability to
+generate an application initialization file that works as a Tcl extension
+rather than as a standalone program.  To build a Tcl extension, enter
+the names of C/C++ modules, Tcl scripts, and Data Files into xmktclapp.tcl
+as you normally would.  But on the Settings page select <b>Extension</b>
+for the Application Mode.  Then select File/Build from the menu.
+Assuming the name of the generated application initialization file is
+<b>hello.c</b>, you can compile the extension for Unix as follows:</a></p>
+
+<blockquote><pre><a name="toc17b"><b>gcc -shared -o hello.so hello.c -ltk -L/usr/X11R6/lib -lX11 -ltcl -lm -ldl
+</b></a></pre></blockquote>
+
+<p><a name="toc17b">For Windows, the compilation process is more involved. These are
+the steps:</a></p>
+
+<blockquote><pre><a name="toc17b"><b>gcc -c hello.c
+echo EXPORTS &gt;hello.def
+echo Hello_Init &gt;&gt;hello.def
+dllwrap --def hello.def -v --export-all -dllname hello.dll \
+   hello.o -ltk -ltcl</b>
+</a></pre></blockquote>
+
+<p><a name="toc17b">The above will generate an extension that can be loaded only by
+the <b>cygwish</b> version of wish that comes with Cygwin.  If you
+want to make the extension usable by any version of wish, you have
+to enable stubs support.  Do so by adding the options
+"-DUSE_TCL_STUBS" and "-mno-cygwin" to the compiler command line and 
+link against a compatible Tcl stubs library.  You'll have to build a 
+version of the
+stubs libraries that is compatible with cygwin in order for this
+to work.  The sources to this library are in files named <b>tclStubLib.c</b>
+and <b>tkStubLib.c</b> in the Tcl/Tk source tree.</a></p>
+
+<p><a name="toc17b">The name of the initialization function within the generated extension
+is based on the name of the initialization file.  In the example above,
+the initialization file was named <b>hello.c</b> so the initialization
+function for the extension will be named <b>Hello_Init</b>.  The initialization
+function name is formed by taking the root name of the initialization file,
+making the first letter upper case and all other letters lower case, and
+appending "_Init".</a></p>
+
+<p><a name="toc17b">You can compile Tcl scripts and Data Files into your extension just
+like you can with standalone applications.  If your extension contains
+an Et_AppInit() function, that function will be executed as soon as the
+extension is loaded.  If you specify a Startup Script, the script will
+be executed when the extension is loaded, right after the Et_AppInit()
+function has run.</a></p>
+
+<a name="toc18"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc18">Running Mktclapp From The Command Line<br>
+Or In A Makefile
+</a></h2>
+
+<p><a name="toc18">The xmktclapp.tcl GUI really just collects data.  The
+mktclapp command-line program is what does all the work.
+So if you want to fully understand mktclapp, you have to
+understand what the command-line program does.</a></p>
+
+<p><a name="toc18">The mktclapp command line program is what generates both
+the application initialization code and the corresponding
+header file.  Mktclapp is controlled completely by command-line
+arguments.  Its output appears on standard output.</a></p>
+
+<p><a name="toc18">To generate a header file, use the following command:</a></p>
+
+<blockquote><pre><a name="toc18"><b>mktclapp -header &gt;appinit.h</b>
+</a></pre></blockquote>
+
+<p><a name="toc18">If you want to generate an application initialization file
+for <b>hello.tcl</b>, then do this:</a></p>
+
+<blockquote><pre><a name="toc18"><b>mktclapp hello.tcl -main-script hello.tcl &gt;appinit.c</b>
+</a></pre></blockquote>
+
+<p><a name="toc18">Everything is controlled by command-line options.  But it
+doesn't take a large project for the number of command-line
+options to become excessive.  So mktclapp allows you to specify
+the name of a file which is read to extract additional
+command-line options.  In fact, the <b>.mta</b> configuration
+files that xmktclapp.tcl generates are just such files.</a></p>
+
+<p><a name="toc18">Suppose, for example, that you use xmktclapp.tcl to generate
+a configuration file named <b>hello.mta</b>.  Then to use
+this configuration file to generate an application initialization
+file, you just type:</a></p>
+
+<blockquote><pre><a name="toc18"><b>mktclapp -f hello.mta &gt;hello.c</b>
+</a></pre></blockquote>
+
+<p><a name="toc18">In fact, this is all xmktclapp.tcl does when you press the
+"Build" button.  (Grep for "exec mktclapp" on the xmktclapp.tcl
+source code and you will see.)
+If you look at the content of a configuration file, you will see
+that it consists of comments and command-line options for
+mktclapp.  Go ahead.  Look at an <b>.mta</b> file now.  The
+contents are instructive.</a></p>
+
+<p><a name="toc18">So one easy way to add mktclapp to a Makefile is to generate
+the configuration file (the <b>.mta</b> file) using xmktclapp.tcl,
+then add a rule like this to your Makefile:</a></p>
+
+<blockquote><pre><a name="toc18"><b>hello.c:    hello.mta
+            mktclapp -f hello.mta &gt;hello.c</b>
+</a></pre></blockquote>
+
+<p><a name="toc18">That's all I'm going to say about running mktclapp from the
+command line.
+If you want to know more about the command-line options available
+with mktclapp and how they work, you should look at the output
+of</a></p>
+
+<blockquote><pre><a name="toc18"><b>mktclapp -help</b>
+</a></pre></blockquote>
+
+<p><a name="toc18">and study some of the configuration files that xmktclapp generates.
+It isn't difficult and you should have no trouble figuring it
+out given the above hints.</a></p>
+
+<a name="toc18b"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc18b">Using MkTclApp With The MingW32 Compiler For Windows
+</a></h2>
+
+<!-- <p><i>This section was added on October 8, 1999</i></p> -->
+
+<p><a name="toc18b">By default, the cygwin compiler generates an executable that
+requires a special DLL named <b>cygwin1.dll</b>.  This DLL is
+covered by the GNU Public License.  Consequently, you cannot
+distribute the DLL with your product unless you are also willing
+to distribute your source code.  Many managers find this
+restruction unacceptable.</a></p>
+
+<p><a name="toc18b">If you don't want to use the cygwin1.dll library, you can still
+use the cygwin compiler.  You simply have to give the compiler a
+special command-line option:  <b>-mno-cygwin</b>.  With the -mno-cygwin
+command-line option, the cygwin compiler will generate an executable
+that uses only native Windows DLLs.  You are free to distribute such
+an executable without having to make the source code available.</a></p>
+
+<p><a name="toc18b">The only problem with this approach is that the Tcl/Tk libraries
+that come with cygwin depend on the cygwin1.dll DLL.  So if you use
+the -mno-cygwin switch, you won't be able to use the Tcl/Tk libraries
+that come in the cygwin package.  You'll have to either compile the
+Tcl/Tk libraries yourself (using VC++) or get a copy from Scriptics.</a></p>
+
+<p><a name="toc18b">Here is how you can use the Tcl/Tk DLLs and libraries from the standard
+Scriptics distributions with the cygwin compiler.  First get and install
+the binary distribution of Tcl/Tk from Scriptics.  The binary distribution
+contains the DLLs you'll need along with C header files and 
+interface libraries.  The DLLs and header files you can use as is.
+However, the libraries (tcl82.lib and tk82.lib) will only work with
+VC++.  You'll need to create new libraries named tcl82.a and tk82.a
+for use with cygwin.  I'll describe how to do this using the Tcl
+library as an example.</a></p>
+
+<p><a name="toc18b">The first step is to generate a suitable DEF file.  
+Execute the following commands from a Cygwin shell:</a></p>
+
+<blockquote><pre><a name="toc18b"><b>echo EXPORTS &gt;tcl82.def
+nm tcl82.lib | grep 'T _' | sed 's/.* T _//' &gt;&gt;tcl82.def
+</b></a></pre></blockquote>
+
+<p><a name="toc18b">If you do it right, the DEF file will begin with the
+keyword "EXPORTS" then contain the name of every API function
+in the TCL library, one function name per line.  Use the
+DEF file to generate the library <b>libtcl82.a</b> as follows:</a></p>
+
+<blockquote><pre><a name="toc18b"><b>dlltool --def tcl82.def --dllname tcl82.dll --output-lib libtcl82.a
+</b></a></pre></blockquote>
+
+<p><a name="toc18b">Follow the same steps to generate libtk82.a, then link your
+program against the new libtcl82.a and libtk82.a library files.
+Put the tcl82.dll and tk82.dll DLLs from the standard distribution
+in the same directory as your executable and everything should
+work.</a></p>
+
+<p><a name="toc18b"><i>Added August 12, 2000:</i>
+Beginning with version 8.3.2, Tcl/Tk will compile cleanly using
+either the Cygwin or Mingw32 compilers.  The distribution comes
+with a configure script in the "win" subdirectory of the source
+tree.  Just run "configure" and "make" and everything will be
+built for you automatically.  You can even do this with a
+cross-compiler.  For additional instructions on compiling
+Tcl/Tk 8.3.2 using the Mingw cross-compiler, see
+</a><a href="http://www.hwaci.com/sw/mktclapp/win32-compile.html">
+http://www.hwaci.com/sw/mktclapp/win32-compile.html</a>.</p>
+
+<a name="toc19"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc19">History Of Mktclapp And Summary
+</a></h2>
+
+<p><a name="toc19">I first started programming Tcl/Tk back in 1994, with Tk3.6.
+Right away, I needed a simple way to mix C/C++ with Tcl/Tk so
+I wrote the "Embedded Tk" or "ET" package.  ET was and continues
+to be widely used even if its interface is a bit clunky.</a></p>
+
+<p><a name="toc19">Mktclapp was written as a follow-on to ET.  It has the same
+goal as ET, to make it easier to program with a mixture of C/C++ 
+and Tcl/Tk, but the interface is very different.  I think
+the interface is much cleaner and easier to use.  It is
+certainly much easier to maintain.  I encourage all ET
+users to transition to using mktclapp as soon as possible.</a></p>
+
+<p><a name="toc19">The development of mktclapp began in the early fall of 1998.
+I have personally used mktclapp to develop applications for
+three separate clients.  And other users have had success with
+mktclapp too, to judge from my e-mail and from the number
+of downloads.</a></p>
+
+<p><a name="toc19">I hope you find mktclapp useful in your own endeavors.
+If you do, I would appreciate a brief 
+</a><a href="mailto:drh@acm.org">e-mail</a> telling me
+how you are using mktclapp and how it has helped you.
+Better still, if you find a bug or a missing feature,
+please let me know.  Mktclapp has already been much improved
+by user feedback.</p>
+
+<p>Please note that the mktclapp program itself, and the
+xmktclapp.tcl GUI, are covered under the 
+<a href="http://www.gnu.ai.mit.edu/copyleft/gpl.html">GNU Public License</a>.
+But the C code that mktclapp generates (the part you link with your
+program) is free of any copyright.  You can use it however you
+wish and you do not have to give away the source.</p>
+
+<a name="toc20"><!-- AUTO -->
+</a><h2 align="center">
+<a name="toc20">Bibliography
+</a></h2>
+
+<dl compact="compact">
+<p></p><dt><a name="toc20">[1]
+</a></dt><dd><a name="toc20"> The Mktclapp Homepage.
+     </a><a href="http://www.hwaci.com/sw/mktclapp/">
+     http://www.hwaci.com/sw/mktclapp/
+     </a>
+</dd><p></p>
+<p></p><dt>[2]</dt>
+<dd> The Embedded Tk Homepage.
+     <a href="http://www.hwaci.com/sw/et/">
+     http://www.hwaci.com/sw/et/
+     </a>
+</dd><p></p>
+<p></p><dt>[3]</dt>
+<dd> The Tcl Consortium Homepage
+     <a href="http://www.tclconsortium.org/">
+     http://www.tclconsortium.org/
+     </a>
+</dd><p></p>
+<p></p><dt>[4]</dt>
+<dd> The homepage for Scriptics Corporations
+     <a href="http://www.scriptics.com/">
+     http://www.scriptics.com/
+     </a>
+</dd><p></p>
+<p></p><dt>[5]</dt>
+<dd> The Cygwin Compiler Page at Cygnus.
+     <a href="http://sourceware.cygnus.com/cygwin/">
+     http://sourceware.cygnus.com/cygwin/
+     </a>
+</dd><p></p>
+<p></p><dt>[6]</dt>
+<dd> Dennis LaBelle's Freewrap Program.
+     <a href="http://home.nycap.rr.com/dlabelle/freewrap/freewrap.html">
+     http://home.nycap.rr.com/dlabelle/freewrap/freewrap.html
+     </a>
+</dd><p></p>
+<p></p><dt>[7]</dt>
+<dd> Mumit Khan's Tcl/Tk Archives for the Cygwin and Mingw32 Compilers.
+     <a href="http://www.xraylith.wisc.edu/%7Ekhan/software/tcl">
+     http://www.xraylith.wisc.edu/~khan/software/tcl
+     </a>
+</dd><p></p>
+<p></p><dt>[8]</dt>
+<dd> Daniel Roche's balloon widget for Tcl/Tk
+     <a href="http://www.multimania.com/droche/tkballoon/index.html">
+     http://www.multimania.com/droche/tkballoon/index.html
+     </a>
+</dd><p></p>
+<p></p><dt>[9]</dt>
+<dd> Cameron Laird's Personal Notes On Tcl Compilers
+<a href="http://starbase.neosoft.com/%7Eclaird/comp.lang.tcl/tcl_compilers.html">
+http://starbase.neosoft.com/~claird/comp.lang.tcl/tcl_compilers.html</a>
+</dd><p></p>
+<p></p><dt>[10]</dt>
+<dd> The BLT Extension
+     <a href="http://www.tcltk.com/blt/">
+     http://www.tcltk.com/blt/
+     </a>
+</dd><p></p>
+<p></p><dt>[11]</dt>
+<dd> The GNU Public License
+     <a href="http://www.gnu.ai.mit.edu/copyleft/gpl.html">
+     http://www.gnu.ai.mit.edu/copyleft/gpl.html
+     </a>
+</dd><p></p>
+<p></p><dt>[12]</dt>
+<dd> Jan Nijtmans' Wrap Program
+     <a href="http://home.wxs.nl/%7Enijtmans/wrap.html">
+     http://www.wxs.nl/~nijtmans/wrap.html
+     </a>
+</dd><p></p>
+</dl>
+
+<p></p><hr><p></p>
+<p align="right">
+D. Richard Hipp<br>
+<a href="mailto:drh@acm.org">drh@acm.org</a><br>
+Charlotte, NC<br>
+May 31, 1999
+</p>
+
+
+</body></html>

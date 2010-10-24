@@ -15,5 +15,5 @@ button .b -text "Select a file?" \
         -command "doIt .l"
 
 grid .b -row 0 -column 0
-grid .l -row 0 -column 1
+grid .l -row 1 -column 1
 
