@@ -7,7 +7,8 @@ rem
 rem
 
 REM =================================
-set IFNAME="Local Area Connection"
+REM set IFNAME="Local Area Connection"
+set IFNAME="Wireless Network Connection"
 REM =================================
 
 echo "Set IP to dhcp"

@@ -13,6 +13,15 @@ proc closeFile {} {
 
 }
 
+proc copyText {} {
+}
+
+proc cutText {} {
+}
+
+proc pasteText {} {
+}
+
 proc exitApp {} {
     destroy .
 }
@@ -56,6 +65,9 @@ $m.file add separator
 $m.file add command -label "Exit" -command "exitApp"
 
 # submenu /edit
+$m.edit add command -label "Cut" -command "cutText"
+$m.edit add command -label "Copy" -command "copyText"
+$m.edit add command -label "Paste" -command "pasteText"
 
 # submenu /help
 $m.help add command -label "About" -command "showAbout"

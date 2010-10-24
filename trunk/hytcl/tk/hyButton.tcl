@@ -9,9 +9,11 @@ button .hello -text "Hello, world" \
        puts stdout "Hello, world"; destroy .
   }
 
+#
 button .goodbye -text Bye! \
    -command {exit}
 
+#
 pack .hello -padx 60 -pady 5
 pack .goodbye -padx 60 -pady 5
 

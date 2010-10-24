@@ -1,6 +1,7 @@
 # hello.tcl
 label .title -text "Tcl/Tk Greeting Program" -relief raised
 label .response
+
 button .greet -text "Greet" -command {
     .response configure -text "hello, world"
     wm geometry . 300x200+5+40

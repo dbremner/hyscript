@@ -14,17 +14,17 @@
 proc Dos2Unix {f} {
     puts $f
     if {[file isdirectory $f]} {
-    foreach g [glob [file join $f *]] {
+      foreach g [glob [file join $f *]] {
         Dos2Unix $g
-    }
+      }
     } else {
-    set in [open $f]
-    set out [open $f.new w]
-    fconfigure $out -translation lf
-    puts -nonewline $out [read $in]
-    close $out
-    close $in
-    file rename -force $f.new $f
+      set in [open $f]
+      set out [open $f.new w]
+      fconfigure $out -translation lf
+      puts -nonewline $out [read $in]
+      close $out
+      close $in
+      file rename -force $f.new $f
     }
 }
 
