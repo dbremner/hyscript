@@ -1,0 +1,1 @@
+Code snippet collection of variable script languages for exercise and future use.
